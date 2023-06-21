@@ -1,0 +1,154 @@
+﻿<Window x:Class="BaşarıBelgesi.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:local="clr-namespace:BaşarıBelgesi"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="Başarı Belgesi"
+    d:Height="768" d:Width="1024"
+    DataContext="{DynamicResource BaşarıBelgesiViewModel}"
+    UseLayoutRounding="True" WindowStartupLocation="CenterScreen"
+    WindowState="Maximized"
+    mc:Ignorable="d">
+    <Window.Resources>
+        <local:BaşarıBelgesiViewModel x:Key="BaşarıBelgesiViewModel" />
+        <Style TargetType="HeaderedContentControl">
+            <Setter Property="IsTabStop" Value="False" />
+        </Style>
+        <Style x:Key="WrapText" TargetType="{x:Type TextBlock}">
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </Window.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition Width="2*" />
+        </Grid.ColumnDefinitions>
+        <UniformGrid Rows="2">
+            <GroupBox Header="KURUM">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <HeaderedContentControl Header="ADI">
+                            <TextBox Text="{Binding Kurum.Adi, UpdateSourceTrigger=PropertyChanged}" />
+                        </HeaderedContentControl>
+                        <HeaderedContentControl Header="AMİR ADI">
+                            <TextBox Text="{Binding Kurum.AmirAdi, UpdateSourceTrigger=PropertyChanged}" />
+                        </HeaderedContentControl>
+                        <HeaderedContentControl Header="AMİR SOYADI">
+                            <TextBox Text="{Binding Kurum.AmirSoyadi, UpdateSourceTrigger=PropertyChanged}" />
+                        </HeaderedContentControl>
+                        <HeaderedContentControl Header="AMİR UNVANI">
+                            <TextBox Text="{Binding Kurum.AmirUnvani, UpdateSourceTrigger=PropertyChanged}" />
+                        </HeaderedContentControl>
+                        <Button Command="{Binding AddLogo}" Content="LOGO EKLE" />
+                        <Button Command="{Binding AddKurum}" Content="EKLE" />
+                        <GroupBox Height="180" Header="KURUMLAR">
+                            <ListBox d:ItemsSource="{d:SampleData ItemCount=1}" ItemsSource="{Binding Kurumlar.Kurum}" SelectedItem="{Binding SeçiliKurum}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <TextBox VerticalAlignment="Center" Text="{Binding Adi, UpdateSourceTrigger=PropertyChanged}" />
+                                            <UniformGrid Columns="3">
+                                                <TextBlock Text="AMİR ADI" />
+                                                <TextBlock Text="AMİR SOYADI" />
+                                                <TextBlock Text="AMİR UNVANI" />
+                                                <TextBox Text="{Binding AmirAdi, UpdateSourceTrigger=PropertyChanged}" />
+                                                <TextBox Text="{Binding AmirSoyadi, UpdateSourceTrigger=PropertyChanged}" />
+                                                <TextBox Text="{Binding AmirUnvani, UpdateSourceTrigger=PropertyChanged}" />
+                                            </UniformGrid>
+                                            <Image Width="64" Height="64"
+                                                d:Source="App.ico"
+                                                Source="{Binding Logo, Mode=OneWay, Converter={StaticResource ByteToImageConverter}}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <VirtualizingStackPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                            </ListBox>
+                        </GroupBox>
+                    </StackPanel>
+                </ScrollViewer>
+            </GroupBox>
+            <GroupBox Header="KİŞİ">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <HeaderedContentControl Header="ADI">
+                            <TextBox Text="{Binding Kişi.Adi, UpdateSourceTrigger=PropertyChanged}" />
+                        </HeaderedContentControl>
+                        <HeaderedContentControl Header="SOYADI">
+                            <TextBox Text="{Binding Kişi.Soyadi, UpdateSourceTrigger=PropertyChanged}" />
+                        </HeaderedContentControl>
+                        <HeaderedContentControl Header="TC KİMLİK NO">
+                            <TextBox Text="{Binding Kişi.TC, UpdateSourceTrigger=PropertyChanged}" />
+                        </HeaderedContentControl>
+                        <HeaderedContentControl Header="ÜNVAN">
+                            <TextBox Text="{Binding Kişi.Unvan, UpdateSourceTrigger=PropertyChanged}" />
+                        </HeaderedContentControl>
+                        <HeaderedContentControl Header="BAŞARI BELGE TİPİ">
+                            <TextBox Text="{Binding Kişi.BasariBelgeTipi, UpdateSourceTrigger=PropertyChanged}" />
+                        </HeaderedContentControl>
+                        <HeaderedContentControl Header="AÇIKLAMA">
+                            <TextBox Height="64" Text="{Binding Kişi.BasariBelgeAciklama, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" />
+                        </HeaderedContentControl>
+                        <HeaderedContentControl Header="GÖREV YERİ">
+                            <TextBox Text="{Binding Kişi.GorevYeri, UpdateSourceTrigger=PropertyChanged}" />
+                        </HeaderedContentControl>
+                        <Button Command="{Binding AddKişi}" Content="EKLE" />
+                    </StackPanel>
+                </ScrollViewer>
+            </GroupBox>
+        </UniformGrid>
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="5*" />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <DataGrid AutoGenerateColumns="False" CanUserAddRows="False"
+                CanUserDeleteRows="False"
+                ItemsSource="{Binding SeçiliKurum.Kişi}"
+                SelectedItem="{Binding SeçiKişi}">
+                <DataGrid.Columns>
+                    <DataGridCheckBoxColumn Binding="{Binding Seçili, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" CanUserSort="False">
+                        <DataGridCheckBoxColumn.HeaderTemplate>
+                            <DataTemplate>
+                                <CheckBox Command="{Binding KişiTümünüSeç, Mode=OneWay, Source={StaticResource BaşarıBelgesiViewModel}}" IsChecked="{Binding TümüSeçili, Source={StaticResource BaşarıBelgesiViewModel}}" />
+                            </DataTemplate>
+                        </DataGridCheckBoxColumn.HeaderTemplate>
+                    </DataGridCheckBoxColumn>
+                    <DataGridTextColumn Binding="{Binding Adi}" Header="ADI" />
+                    <DataGridTextColumn Binding="{Binding Soyadi}" Header="SOYADI" />
+                    <DataGridTextColumn Binding="{Binding Unvan}" Header="ÜNVAN" />
+                    <DataGridTextColumn Binding="{Binding BasariBelgeTipi}" Header="BAŞARI BELGE TİPİ" />
+                    <DataGridTextColumn Width="300"
+                        Binding="{Binding BasariBelgeAciklama}"
+                        ElementStyle="{StaticResource WrapText}"
+                        Header="AÇIKLAMA" />
+                    <DataGridTextColumn Binding="{Binding GorevYeri}" Header="GÖREV YERİ" />
+                    <DataGridTextColumn Binding="{Binding TC}" Header="TC KİMLİK NO" />
+                    <DataGridTemplateColumn Header="RESİM">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Image Width="128" Height="128" Source="{Binding Resim, Converter={StaticResource ByteToImageConverter}}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate>
+                                <Button Width="128" Height="128"
+                                    Command="{Binding AddKişiLogo, Mode=OneWay, Source={StaticResource BaşarıBelgesiViewModel}}"
+                                    Content="RESİM EKLE/GÜNCELLE" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+            <UniformGrid Grid.Row="1" Columns="4">
+                <Button Command="{Binding Sakla}" Content="AYARLARI SAKLA" />
+                <Button Command="{Binding ŞablonGöster}" Content="EXCEL ŞABLONU AL" />
+                <Button Command="{Binding ExceldenAl}" Content="EXCELDEN VERİ AL" />
+                <Button Command="{Binding BaşarıBelgesiÇıkar}" Content="BAŞARI BELGESİ ÇIKAR" />
+            </UniformGrid>
+        </Grid>
+    </Grid>
+</Window>
