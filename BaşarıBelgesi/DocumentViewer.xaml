@@ -9,6 +9,11 @@
     WindowState="Maximized"
     mc:Ignorable="d">
     <Grid>
-        <DocumentViewer Document="{Binding Document}" />
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <Button Grid.Row="0" Command="{Binding OpenFile}" Content="XPS GÖRÜNTÜLEYİCİSİ İLE GÖSTER" />
+        <DocumentViewer Grid.Row="1" Document="{Binding Document}" />
     </Grid>
 </Window>

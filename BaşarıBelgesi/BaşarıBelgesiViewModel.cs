@@ -11,6 +11,7 @@ using System.IO.Packaging;
 using System.Linq;
 using System.Text;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Markup;
 using System.Windows.Xps.Packaging;
@@ -61,7 +62,6 @@ namespace BaşarıBelgesi
                     AmirAdi = Kurum.AmirAdi,
                     AmirSoyadi = Kurum.AmirSoyadi,
                     AmirUnvani = Kurum.AmirUnvani,
-                    SablonLogo = Kurum.SablonLogo,
                 };
                 Kurumlar.Kurum.Add(kurum);
                 Kurumlar.Serialize();
@@ -76,7 +76,7 @@ namespace BaşarıBelgesi
                 };
                 if (openFileDialog.ShowDialog() == true)
                 {
-                    SeçiliKurum.Logo = SetImage(openFileDialog.FileName);
+                    SeçiliKurum.Logo = SetImage(openFileDialog.FileName, System.Drawing.Imaging.ImageFormat.Png);
                 }
                 Kurumlar.Serialize();
             }, parameter => SeçiliKurum is not null);
@@ -90,7 +90,7 @@ namespace BaşarıBelgesi
                 };
                 if (openFileDialog.ShowDialog() == true)
                 {
-                    SeçiKişi.Resim = SetImage(openFileDialog.FileName);
+                    SeçiKişi.Resim = SetImage(openFileDialog.FileName, System.Drawing.Imaging.ImageFormat.Jpeg);
                 }
                 Kurumlar.Serialize();
             }, parameter => SeçiKişi is not null);
@@ -107,6 +107,10 @@ namespace BaşarıBelgesi
 
             BaşarıBelgesiÇıkar = new RelayCommand<object>(parameter =>
             {
+                if (parameter is DataGrid dataGrid && HasValidationErrors(dataGrid))
+                {
+                    _ = MessageBox.Show("Hatalı Kayıtlar Vardır.");
+                }
                 if (File.Exists("report.lqd"))
                 {
                     IEnumerable<Kişi> data = SeçiliKurum?.Kişi.Where(z => z.Seçili);
@@ -304,10 +308,25 @@ namespace BaşarıBelgesi
             return template.Render(docContext);
         }
 
-        private string SetImage(string imagePath)
+        private bool HasValidationErrors(DataGrid dataGrid)
+        {
+            foreach (object item in dataGrid.Items)
+            {
+                ReadOnlyObservableCollection<ValidationError> validationResult = Validation.GetErrors(dataGrid.ItemContainerGenerator.ContainerFromItem(item));
+
+                if (validationResult.Count > 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private string SetImage(string imagePath, System.Drawing.Imaging.ImageFormat format)
         {
             const int maxWidth = 240;
-            Image image = Image.FromFile(imagePath);
+            using System.Drawing.Image image = System.Drawing.Image.FromFile(imagePath);
             int newWidth = image.Width;
             int newHeight = image.Height;
             if (newWidth > maxWidth)
@@ -315,9 +334,9 @@ namespace BaşarıBelgesi
                 newWidth = maxWidth;
                 newHeight = (int)(image.Height * (float)maxWidth / image.Width);
             }
-            Image resizedImage = new Bitmap(image, newWidth, newHeight);
+            using System.Drawing.Image resizedImage = new Bitmap(image, newWidth, newHeight);
             MemoryStream memoryStream = new();
-            resizedImage.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Jpeg);
+            resizedImage.Save(memoryStream, format);
             return Convert.ToBase64String(memoryStream.ToArray());
         }
 

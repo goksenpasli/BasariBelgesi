@@ -4,10 +4,9 @@ using DotLiquid;
 
 namespace BaşarıBelgesi
 {
-    public class Kurum : InpcBase,ILiquidizable
+    public class Kurum : InpcBase, ILiquidizable
     {
         [XmlAttribute(AttributeName = "Adi")]
-
         public string Adi {
             get => adi; set {
 
@@ -18,8 +17,8 @@ namespace BaşarıBelgesi
                 }
             }
         }
-        [XmlAttribute(AttributeName = "AmirAdi")]
 
+        [XmlAttribute(AttributeName = "AmirAdi")]
         public string AmirAdi {
             get => amirAdi; set {
 
@@ -30,8 +29,8 @@ namespace BaşarıBelgesi
                 }
             }
         }
-        [XmlAttribute(AttributeName = "AmirSoyadi")]
 
+        [XmlAttribute(AttributeName = "AmirSoyadi")]
         public string AmirSoyadi {
             get => amirSoyadi; set {
 
@@ -42,8 +41,8 @@ namespace BaşarıBelgesi
                 }
             }
         }
-        [XmlAttribute(AttributeName = "AmirUnvani")]
 
+        [XmlAttribute(AttributeName = "AmirUnvani")]
         public string AmirUnvani {
             get => amirUnvani; set {
 
@@ -54,8 +53,8 @@ namespace BaşarıBelgesi
                 }
             }
         }
-        [XmlElement(ElementName = "Kişi")]
 
+        [XmlElement(ElementName = "Kişi")]
         public ObservableCollection<Kişi> Kişi {
             get => kişi;
 
@@ -67,8 +66,8 @@ namespace BaşarıBelgesi
                 }
             }
         }
-        [XmlAttribute(AttributeName = "Logo")]
 
+        [XmlAttribute(AttributeName = "Logo")]
         public string Logo {
             get => logo; set {
 
@@ -79,17 +78,16 @@ namespace BaşarıBelgesi
                 }
             }
         }
-        [XmlAttribute(AttributeName = "SablonLogo")]
 
-        public string SablonLogo {
-            get => sablonLogo; set {
-
-                if (sablonLogo != value)
-                {
-                    sablonLogo = value;
-                    OnPropertyChanged(nameof(SablonLogo));
-                }
-            }
+        public object ToLiquid()
+        {
+            return new {
+                Adi,
+                AmirAdi,
+                AmirSoyadi,
+                AmirUnvani,
+                Logo,
+            };
         }
 
         private string adi;
@@ -100,22 +98,8 @@ namespace BaşarıBelgesi
 
         private string amirUnvani;
 
-        private ObservableCollection<Kişi> kişi=new();
+        private ObservableCollection<Kişi> kişi = new();
 
         private string logo;
-
-        private string sablonLogo;
-
-        public object ToLiquid()
-        {
-            return new {
-                Adi,
-                AmirAdi,
-                AmirSoyadi,
-                AmirUnvani,
-                Logo,
-                SablonLogo,
-            };
-        }
     }
 }

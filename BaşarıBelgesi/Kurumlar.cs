@@ -3,12 +3,9 @@ using System.Xml.Serialization;
 
 namespace BaşarıBelgesi
 {
-    public class Kurumlar:InpcBase
+    public class Kurumlar : InpcBase
     {
-        private ObservableCollection<Kurum> kurum=new();
-
         [XmlElement(ElementName = "Kurum")]
-
         public ObservableCollection<Kurum> Kurum {
             get => kurum;
 
@@ -20,5 +17,7 @@ namespace BaşarıBelgesi
                 }
             }
         }
+
+        private ObservableCollection<Kurum> kurum = new();
     }
 }

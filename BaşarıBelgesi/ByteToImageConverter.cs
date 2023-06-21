@@ -6,7 +6,6 @@ using System.Windows.Media.Imaging;
 
 namespace BaşarıBelgesi
 {
-
     public class ByteToImageConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
@@ -35,5 +34,4 @@ namespace BaşarıBelgesi
             throw new NotImplementedException();
         }
     }
-
 }

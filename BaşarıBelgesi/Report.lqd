@@ -72,6 +72,9 @@
 		<LineBreak />
 		<Run Text="Unvanı" />
 		<Run Text="&#9;&#9;&#9;:{{kişi.Unvan}}" />
+		<LineBreak />
+		<Run Text="Görev Yeri" />
+		<Run Text="&#9;&#9;:{{kişi.GorevYeri}}" />
 	</Paragraph>
 	</Section>
 	<Section Margin="45">		
