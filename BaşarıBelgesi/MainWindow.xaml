@@ -4,6 +4,7 @@
     xmlns:System="clr-namespace:System;assembly=mscorlib"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:local="clr-namespace:BaşarıBelgesi"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:properties="clr-namespace:BaşarıBelgesi.Properties"
     Title="Başarı Belgesi"
     d:Height="768" d:Width="1024"
     DataContext="{DynamicResource BaşarıBelgesiViewModel}"
@@ -113,8 +114,8 @@
         </UniformGrid>
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="5*" />
                 <RowDefinition />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <DataGrid x:Name="Dg"
                 d:ItemsSource="{d:SampleData ItemCount=3}"
@@ -162,7 +163,23 @@
                     </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
-            <UniformGrid Grid.Row="1" Columns="4">
+            <UniformGrid Grid.Row="1" Columns="3">
+                <TextBlock VerticalAlignment="Center" Text="GÖVDE YAZI TİPİ" />
+                <ComboBox VerticalContentAlignment="Center"
+                    ItemsSource="{Binding Source={x:Static Fonts.SystemFontFamilies}}"
+                    SelectedValue="{Binding GövdeYazıTipi, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, Source={x:Static properties:Settings.Default}}"
+                    SelectedValuePath="Source">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock FontFamily="{Binding Mode=OneWay}" Text="{Binding Mode=OneWay}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                    <ComboBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel />
+                        </ItemsPanelTemplate>
+                    </ComboBox.ItemsPanel>
+                </ComboBox>
                 <Button Command="{Binding Sakla}" Content="AYARLARI SAKLA" />
                 <Button Command="{Binding ŞablonGöster}" Content="EXCEL ŞABLONU AL" />
                 <Button Command="{Binding ExceldenAl}" Content="EXCELDEN VERİ AL" />

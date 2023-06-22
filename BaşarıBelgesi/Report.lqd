@@ -1,6 +1,6 @@
 ﻿<FlowDocument IsOptimalParagraphEnabled="true" PageHeight="21cm" PageWidth="29.7cm"  ColumnWidth="29.7cm" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 	xmlns:sys="clr-namespace:System;assembly=mscorlib"
-	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
  FontFamily="Segoe UI" >
 	<FlowDocument.Background>
 		<ImageBrush>
@@ -77,9 +77,9 @@
 		<Run Text="&#9;&#9;:{{kişi.GorevYeri}}" />
 	</Paragraph>
 	</Section>
-	<Section Margin="45">		
-	<Paragraph TextElement.FontStyle="Italic" TextIndent="30">
-		{{kişi.BasariBelgeAciklama}}
+	<Section Margin="45">
+		<Paragraph TextElement.FontStyle="Italic" TextIndent="30" TextElement.FontFamily="{{GövdeYazıTipi}}">
+		{{kişi.BasariBelgeAciklama}}	
 	</Paragraph>
 	</Section>
 	<Section Margin="700,100,0,0">	

@@ -1,7 +1,7 @@
 ﻿<Application x:Class="BaşarıBelgesi.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:başarıbelgesi="clr-namespace:BaşarıBelgesi"
+    xmlns:başarıbelgesi="clr-namespace:BaşarıBelgesi" 
     xmlns:ice="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
     Startup="Application_Startup" StartupUri="MainWindow.xaml">
     <Application.Resources>

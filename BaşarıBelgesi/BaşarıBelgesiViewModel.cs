@@ -27,11 +27,11 @@ namespace BaşarıBelgesi
         public BaşarıBelgesiViewModel()
         {
             XmlDataPath = Path.GetDirectoryName(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath) + @"\Data.xml";
+            Properties.Settings.Default.PropertyChanged += Default_PropertyChanged;
             Kişi = new Kişi();
             Kurum = new Kurum();
             DocumentViewModel = new DocumentViewModel();
             Kurumlar = new Kurumlar() { Kurum = DataYükle() };
-
             AddKişi = new RelayCommand<object>(parameter =>
             {
                 Kişi kişi = new()
@@ -120,6 +120,7 @@ namespace BaşarıBelgesi
                         Hash günlükrapor = Hash.FromAnonymousObject(new {
                             Kişi = data,
                             Kurum = kurum,
+                            Properties.Settings.Default.GövdeYazıTipi
                         });
                         string template = GenerateTemplate(günlükrapor, "report.lqd");
                         FlowDocument fd = (FlowDocument)XamlReader.Parse(template);
@@ -295,6 +296,14 @@ namespace BaşarıBelgesi
                     TC = veri[6]
                 };
             });
+        }
+
+        private void Default_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName is "GövdeYazıTipi")
+            {
+                Properties.Settings.Default.Save();
+            }
         }
 
         private string GenerateTemplate(Hash context, string reportpath)
