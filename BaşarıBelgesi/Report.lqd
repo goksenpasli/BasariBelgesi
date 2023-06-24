@@ -1,6 +1,6 @@
 ﻿<FlowDocument IsOptimalParagraphEnabled="true" PageHeight="21cm" PageWidth="29.7cm"  ColumnWidth="29.7cm" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 	xmlns:sys="clr-namespace:System;assembly=mscorlib"
-	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
  FontFamily="Segoe UI" >
 	<FlowDocument.Background>
 		<ImageBrush>
@@ -16,7 +16,7 @@
 		<Table>
 			<Table.Columns>
 				<TableColumn Width="*" />
-				<TableColumn Width="2*" />
+				<TableColumn Width="3*" />
 				<TableColumn Width="*" />
 			</Table.Columns>
 			<TableRowGroup>
@@ -34,12 +34,12 @@
 					</TableCell>
 					<TableCell>
 						<Paragraph TextAlignment="Center">
-							<Run FontSize="48" Text="T.C." />
+							<Run FontSize="40" Text="T.C." />
 							<LineBreak />
-							<Run FontSize="48" Text="{{kurum.Adi}}" />
+							<Run FontSize="40" Text="{{kurum.Adi}}" />
 							<LineBreak />
 							<LineBreak />
-							<Run FontSize="36" Text="{{kişi.BasariBelgeTipi}}" />
+							<Run FontSize="32" Text="{{kişi.BasariBelgeTipi}}" />
 						</Paragraph>
 					</TableCell>
 					<TableCell>
@@ -57,38 +57,38 @@
 			</TableRowGroup>
 		</Table>
 	</Section>
-	<Section Margin="45,0,0,0">	
-	<Paragraph  FontSize="16" FontWeight="Bold">
-		<LineBreak />
-		<LineBreak />
-		<Run Text="Adı" />
-		<Run Text="&#9;&#9;&#9;:{{kişi.Adi}}" />
-		<LineBreak />
-		<Run Text="Soyadı" />
-		<Run Text="&#9;&#9;&#9;:{{kişi.Soyadi}}" />
-		<LineBreak />
-		<Run Text="T.C. Kimlik No" />
-		<Run Text="&#9;&#9;:{{kişi.TC}}" />
-		<LineBreak />
-		<Run Text="Unvanı" />
-		<Run Text="&#9;&#9;&#9;:{{kişi.Unvan}}" />
-		<LineBreak />
-		<Run Text="Görev Yeri" />
-		<Run Text="&#9;&#9;:{{kişi.GorevYeri}}" />
-	</Paragraph>
+	<Section Margin="45,0,0,0">
+		<Paragraph  FontSize="16" FontWeight="Bold">
+			<LineBreak />
+			<LineBreak />
+			<Run Text="Adı" />
+			<Run Text="&#9;&#9;&#9;:{{kişi.Adi}}" />
+			<LineBreak />
+			<Run Text="Soyadı" />
+			<Run Text="&#9;&#9;&#9;:{{kişi.Soyadi}}" />
+			<LineBreak />
+			<Run Text="T.C. Kimlik No" />
+			<Run Text="&#9;&#9;:{{kişi.TC}}" />
+			<LineBreak />
+			<Run Text="Unvanı" />
+			<Run Text="&#9;&#9;&#9;:{{kişi.Unvan}}" />
+			<LineBreak />
+			<Run Text="Görev Yeri" />
+			<Run Text="&#9;&#9;:{{kişi.GorevYeri}}" />
+		</Paragraph>
 	</Section>
-	<Section Margin="45">
+	<Section FontSize="{{GövdeYazıTipiSize}}" Margin="45,45,45,0">
 		<Paragraph TextElement.FontStyle="Italic" TextIndent="30" TextElement.FontFamily="{{GövdeYazıTipi}}">
-		{{kişi.BasariBelgeAciklama}}	
-	</Paragraph>
+			{{kişi.BasariBelgeAciklama}}
+		</Paragraph>
 	</Section>
-	<Section Margin="700,100,0,0">	
-	<Paragraph FontWeight="Bold" TextAlignment="Center">
-		<Run Text="{{kurum.AmirAdi}}" />
-		<Run Text="{{kurum.AmirSoyadi}}" />
-		<LineBreak />
-		<Run Text="{{kurum.AmirUnvani}}" />
-	</Paragraph>
+	<Section Margin="700,40,0,0">
+		<Paragraph FontWeight="Bold" TextAlignment="Center">
+			<Run Text="{{kurum.AmirAdi}}" />
+			<Run Text="{{kurum.AmirSoyadi}}" />
+			<LineBreak />
+			<Run Text="{{kurum.AmirUnvani}}" />
+		</Paragraph>
 	</Section>
 	{% endfor -%}
 </FlowDocument>

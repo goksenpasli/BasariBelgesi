@@ -13,11 +13,13 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Interop;
 using System.Windows.Markup;
 using System.Windows.Xps.Packaging;
 using System.Windows.Xps.Serialization;
 using DotLiquid;
 using Microsoft.Win32;
+using Microsoft.WindowsAPICodePack.Dialogs;
 using dotTemplate = DotLiquid.Template;
 
 namespace BaşarıBelgesi
@@ -69,12 +71,12 @@ namespace BaşarıBelgesi
 
             AddLogo = new RelayCommand<object>(parameter =>
             {
-                OpenFileDialog openFileDialog = new()
+                CommonOpenFileDialog openFileDialog = new()
                 {
-                    Filter = "Resim Dosyası (*.jpg;*.jpeg;*.jfif;*.jpe;*.png;*.gif;*.tif;*.tiff;*.bmp;*.dib;*.rle;)|*.jpg;*.jpeg;*.jfif;*.jpe;*.png;*.gif;*.tif;*.tiff;*.bmp;*.dib;*.rle;",
+                    Filters = { new CommonFileDialogFilter("Resim Dosyaları", "*.jpg;*.jpeg;*.jfif;*.jpe;*.png;*.gif;*.tif;*.tiff;*.bmp;*.dib;*.rle;") },
                     Multiselect = false
                 };
-                if (openFileDialog.ShowDialog() == true)
+                if (openFileDialog.ShowDialog() == CommonFileDialogResult.Ok)
                 {
                     SeçiliKurum.Logo = SetImage(openFileDialog.FileName, System.Drawing.Imaging.ImageFormat.Png);
                 }
@@ -83,12 +85,12 @@ namespace BaşarıBelgesi
 
             AddKişiLogo = new RelayCommand<object>(parameter =>
             {
-                OpenFileDialog openFileDialog = new()
+                CommonOpenFileDialog openFileDialog = new()
                 {
-                    Filter = "Resim Dosyası (*.jpg;*.jpeg;*.jfif;*.jpe;*.png;*.gif;*.tif;*.tiff;*.bmp;*.dib;*.rle;)|*.jpg;*.jpeg;*.jfif;*.jpe;*.png;*.gif;*.tif;*.tiff;*.bmp;*.dib;*.rle;",
+                    Filters = { new CommonFileDialogFilter("Resim Dosyaları", "*.jpg;*.jpeg;*.jfif;*.jpe;*.png;*.gif;*.tif;*.tiff;*.bmp;*.dib;*.rle;") },
                     Multiselect = false
                 };
-                if (openFileDialog.ShowDialog() == true)
+                if (openFileDialog.ShowDialog() == CommonFileDialogResult.Ok)
                 {
                     SeçiKişi.Resim = SetImage(openFileDialog.FileName, System.Drawing.Imaging.ImageFormat.Jpeg);
                 }
@@ -109,7 +111,15 @@ namespace BaşarıBelgesi
             {
                 if (parameter is DataGrid dataGrid && HasValidationErrors(dataGrid))
                 {
-                    _ = MessageBox.Show("Hatalı Kayıtlar Vardır.");
+                    TaskDialog dialog = new()
+                    {
+                        OwnerWindowHandle = new WindowInteropHelper(Application.Current.MainWindow).Handle,
+                        Caption = Application.Current.MainWindow.Title,
+                        Icon = TaskDialogStandardIcon.Warning,
+                        Text = "Hatalı Kayıtlar Vardır.",
+                        InstructionText = "TC Nolarda Hatalı TC Var."
+                    };
+                    _ = dialog.Show();
                 }
                 if (File.Exists("report.lqd"))
                 {
@@ -120,7 +130,8 @@ namespace BaşarıBelgesi
                         Hash günlükrapor = Hash.FromAnonymousObject(new {
                             Kişi = data,
                             Kurum = kurum,
-                            Properties.Settings.Default.GövdeYazıTipi
+                            Properties.Settings.Default.GövdeYazıTipi,
+                            Properties.Settings.Default.GövdeYazıTipiSize,
                         });
                         string template = GenerateTemplate(günlükrapor, "report.lqd");
                         FlowDocument fd = (FlowDocument)XamlReader.Parse(template);
@@ -131,7 +142,12 @@ namespace BaşarıBelgesi
                             Owner = Application.Current.MainWindow,
                             DataContext = DocumentViewModel
                         };
+                        data = null;
+                        günlükrapor = null;
+                        fd = null;
+                        template = null;
                         t.Show();
+                        GC.Collect();
                     }
                 }
             }, parameter => SeçiliKurum?.Kişi.Any(z => z.Seçili) == true);
@@ -186,6 +202,8 @@ namespace BaşarıBelgesi
         public DocumentViewModel DocumentViewModel { get; }
 
         public RelayCommand<object> ExceldenAl { get; }
+
+        public IEnumerable<int> FontSize { get; } = Enumerable.Range(8, 17);
 
         public Kişi Kişi { get; set; }
 
@@ -300,10 +318,7 @@ namespace BaşarıBelgesi
 
         private void Default_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName is "GövdeYazıTipi")
-            {
-                Properties.Settings.Default.Save();
-            }
+            Properties.Settings.Default.Save();
         }
 
         private string GenerateTemplate(Hash context, string reportpath)
@@ -353,7 +368,15 @@ namespace BaşarıBelgesi
         {
             string dosyaismi = Path.GetTempPath() + Guid.NewGuid() + ".csv";
             File.WriteAllText(dosyaismi, metin, Encoding.Default);
-            _ = MessageBox.Show("Oluşturulan Dosyada İlk Satırları Silmeden Verileri İşleyin Microsoft Excel Virgülle Ayrılmış Değerler Dosyası (*.csv) Olarak Kaydedip Yükleyin.", "Başarı Belgesi", MessageBoxButton.OK, MessageBoxImage.Information);
+            TaskDialog dialog = new()
+            {
+                OwnerWindowHandle = new WindowInteropHelper(Application.Current.MainWindow).Handle,
+                Caption = Application.Current.MainWindow.Title,
+                Icon = TaskDialogStandardIcon.Information,
+                Text = "Excel Dosyasını Doldurun.",
+                InstructionText = "Oluşturulan Dosyada İlk Satırları Silmeden Verileri İşleyin Microsoft Excel Virgülle Ayrılmış Değerler Dosyası (*.csv) Olarak Kaydedip Yükleyin."
+            };
+            _ = dialog.Show();
             _ = Process.Start(dosyaismi);
         }
 

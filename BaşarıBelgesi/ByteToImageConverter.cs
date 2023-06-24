@@ -21,6 +21,7 @@ namespace BaşarıBelgesi
                 byte[] buffer = System.Convert.FromBase64String(base64);
                 bi.StreamSource = new MemoryStream(buffer);
                 bi.CacheOption = BitmapCacheOption.None;
+                bi.CreateOptions = BitmapCreateOptions.IgnoreColorProfile | BitmapCreateOptions.DelayCreation;
                 bi.EndInit();
                 bi.Freeze();
                 return bi;
