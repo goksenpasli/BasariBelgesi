@@ -6,18 +6,18 @@ namespace BaşarıBelgesi
     public class Kurumlar : InpcBase
     {
         [XmlElement(ElementName = "Kurum")]
-        public ObservableCollection<Kurum> Kurum {
-            get => kurum;
+        public ObservableCollection<Kurum> Kurum
+        {
+            get;
 
-            set {
-                if (kurum != value)
+            set
+            {
+                if (field != value)
                 {
-                    kurum = value;
+                    field = value;
                     OnPropertyChanged(nameof(Kurum));
                 }
             }
-        }
-
-        private ObservableCollection<Kurum> kurum = new();
+        } = [];
     }
 }

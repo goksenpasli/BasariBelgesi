@@ -1,120 +1,191 @@
-﻿using System.ComponentModel;
+﻿using DotLiquid;
+using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows.Controls;
 using System.Xml.Serialization;
-using DotLiquid;
 
 namespace BaşarıBelgesi
 {
     public class Kişi : InpcBase, ILiquidizable, IDataErrorInfo
     {
-        [XmlAttribute(AttributeName = "Adi")]
-        public string Adi {
-            get => adi; set {
+        public Kişi() { PropertyChanged += Kişi_PropertyChanged; }
 
-                if (adi != value)
+        [XmlAttribute(AttributeName = "Adi")]
+        public string Adi
+        {
+            get;
+            set
+            {
+
+                if (field != value)
                 {
-                    adi = value;
+                    field = value;
                     OnPropertyChanged(nameof(Adi));
                 }
             }
         }
 
         [XmlAttribute(AttributeName = "BasariBelgeAciklama")]
-        public string BasariBelgeAciklama {
-            get => basariBelgeAciklama; set {
+        public string BasariBelgeAciklama
+        {
+            get;
+            set
+            {
 
-                if (basariBelgeAciklama != value)
+                if (field != value)
                 {
-                    basariBelgeAciklama = value;
+                    field = value;
                     OnPropertyChanged(nameof(BasariBelgeAciklama));
                 }
             }
         }
 
         [XmlAttribute(AttributeName = "BasariBelgeTipi")]
-        public string BasariBelgeTipi {
-            get => basariBelgeTipi; set {
+        public string BasariBelgeTipi
+        {
+            get;
+            set
+            {
 
-                if (basariBelgeTipi != value)
+                if (field != value)
                 {
-                    basariBelgeTipi = value;
+                    field = value;
                     OnPropertyChanged(nameof(BasariBelgeTipi));
+                    OnPropertyChanged(nameof(BasariBelgeAciklama));
                 }
             }
         }
 
         public string Error => string.Empty;
 
-        [XmlAttribute(AttributeName = "GorevYeri")]
-        public string GorevYeri {
-            get => gorevYeri; set {
-
-                if (gorevYeri != value)
+        [XmlAttribute(AttributeName = "EvrakSayı")]
+        public int EvrakSayı
+        {
+            get;
+            set
+            {
+                if (field != value)
                 {
-                    gorevYeri = value;
+                    field = value;
+                    OnPropertyChanged(nameof(EvrakSayı));
+                }
+            }
+        }
+
+        [XmlAttribute(AttributeName = "EvrakTarih")]
+        public DateTime EvrakTarih
+        {
+            get;
+            set
+            {
+                if (field != value)
+                {
+                    field = value;
+                    OnPropertyChanged(nameof(EvrakTarih));
+                }
+            }
+        } = DateTime.Today;
+
+        [XmlAttribute(AttributeName = "Gerekçe")]
+        public string Gerekçe
+        {
+            get;
+            set
+            {
+                if (field != value)
+                {
+                    field = value;
+                    OnPropertyChanged(nameof(Gerekçe));
+                }
+            }
+        } = "Kamu kaynağında önemli ölçüde tasarruf sağlanması Sunulan hizmetlerin etkinlik ve kalitesinin yükseltilmesi";
+
+        [XmlAttribute(AttributeName = "GorevYeri")]
+        public string GorevYeri
+        {
+            get;
+            set
+            {
+
+                if (field != value)
+                {
+                    field = value;
                     OnPropertyChanged(nameof(GorevYeri));
                 }
             }
         }
 
         [XmlAttribute(AttributeName = "Resim")]
-        public string Resim {
-            get => resim;
+        public string Resim
+        {
+            get;
 
-            set {
-                if (resim != value)
+            set
+            {
+                if (field != value)
                 {
-                    resim = value;
+                    field = value;
                     OnPropertyChanged(nameof(Resim));
                 }
             }
         }
 
         [XmlIgnore]
-        public bool Seçili {
-            get => seçili; set {
+        public bool Seçili
+        {
+            get;
+            set
+            {
 
-                if (seçili != value)
+                if (field != value)
                 {
-                    seçili = value;
+                    field = value;
                     OnPropertyChanged(nameof(Seçili));
                 }
             }
         }
 
         [XmlAttribute(AttributeName = "Soyadi")]
-        public string Soyadi {
-            get => soyadi; set {
+        public string Soyadi
+        {
+            get;
+            set
+            {
 
-                if (soyadi != value)
+                if (field != value)
                 {
-                    soyadi = value;
+                    field = value;
                     OnPropertyChanged(nameof(Soyadi));
                 }
             }
         }
 
         [XmlAttribute(AttributeName = "Tc")]
-        public string TC {
-            get => tC;
+        public string TC
+        {
+            get;
 
-            set {
-                if (tC != value)
+            set
+            {
+                if (field != value)
                 {
-                    tC = value;
+                    field = value;
                     OnPropertyChanged(nameof(TC));
                 }
             }
         }
 
         [XmlAttribute(AttributeName = "Unvan")]
-        public string Unvan {
-            get => unvan; set {
+        public string Unvan
+        {
+            get;
+            set
+            {
 
-                if (unvan != value)
+                if (field != value)
                 {
-                    unvan = value;
+                    field = value;
                     OnPropertyChanged(nameof(Unvan));
                 }
             }
@@ -162,41 +233,17 @@ namespace BaşarıBelgesi
 
             string k10 = (((tekler * 7) - ciftler) % 10).ToString();
             string k11 = ((tekler + ciftler + int.Parse(tcKimlikNo[9].ToString())) % 10).ToString();
-            return k10 == tcKimlikNo[9].ToString() && k11 == tcKimlikNo[10].ToString()
-                ? ValidationResult.ValidResult
-                : new ValidationResult(false, "Girilen TC Kimlik No Yanlıştır.");
+            return k10 == tcKimlikNo[9].ToString() && k11 == tcKimlikNo[10].ToString() ? ValidationResult.ValidResult : new ValidationResult(false, "Girilen TC Kimlik No Yanlıştır.");
         }
 
-        public object ToLiquid()
+        public object ToLiquid() => new { Adi, Soyadi, BasariBelgeAciklama, BasariBelgeTipi, GorevYeri, Resim, Unvan, TC, Gerekçe, EvrakSayı, EvrakTarih };
+
+        private void Kişi_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            return new {
-                Adi,
-                Soyadi,
-                BasariBelgeAciklama,
-                BasariBelgeTipi,
-                GorevYeri,
-                Resim,
-                Unvan,
-                TC,
-            };
+            if (e.PropertyName == nameof(BasariBelgeTipi))
+            {
+                BasariBelgeAciklama = $"Görevli olduğunuz kurumda üstün görev ve sorumluluk anlayışıyla görevinizi ifa etmeniz, kendi sorumluluklarınızdaki iş ve işlemleri titizlikle takip ederek, kamu hizmetlerinin hızlı ve vatandaş memnuniyetini önde tutarak yürütülmesi yönündeki başarılı çalışmalarınızdan dolayı sizi 657 sayılı Devlet Memurları Kanunu’ nun 122. Maddesi uyarınca {BasariBelgeTipi} ile taltif eder, başarılı çalışmalarınızın devamını dilerim.";
+            }
         }
-
-        private string adi;
-
-        private string basariBelgeAciklama;
-
-        private string basariBelgeTipi;
-
-        private string gorevYeri;
-
-        private string resim;
-
-        private bool seçili;
-
-        private string soyadi;
-
-        private string tC;
-
-        private string unvan;
     }
 }

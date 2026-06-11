@@ -7,10 +7,7 @@ namespace BaşarıBelgesi
     /// </summary>
     public partial class DocumentViewer : Window
     {
-        public DocumentViewer()
-        {
-            InitializeComponent();
-        }
+        public DocumentViewer() { InitializeComponent(); }
 
         public RelayCommand<object> OpenFile { get; }
     }

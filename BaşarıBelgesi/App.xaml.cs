@@ -10,10 +10,7 @@ namespace BaşarıBelgesi
     /// </summary>
     public partial class App : Application
     {
-        public App()
-        {
-            EventManager.RegisterClassHandler(typeof(TextBox), UIElement.PreviewKeyDownEvent, new KeyEventHandler(KeyDown));
-        }
+        public App() { EventManager.RegisterClassHandler(typeof(TextBox), UIElement.PreviewKeyDownEvent, new KeyEventHandler(KeyDown)); }
 
         private static void KeyDown(object sender, KeyEventArgs e)
         {

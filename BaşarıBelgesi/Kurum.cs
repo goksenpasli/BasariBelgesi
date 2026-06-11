@@ -1,105 +1,101 @@
-﻿using System.Collections.ObjectModel;
+﻿using DotLiquid;
+using System.Collections.ObjectModel;
 using System.Xml.Serialization;
-using DotLiquid;
 
 namespace BaşarıBelgesi
 {
     public class Kurum : InpcBase, ILiquidizable
     {
         [XmlAttribute(AttributeName = "Adi")]
-        public string Adi {
-            get => adi; set {
+        public string Adi
+        {
+            get;
+            set
+            {
 
-                if (adi != value)
+                if (field != value)
                 {
-                    adi = value;
+                    field = value;
                     OnPropertyChanged(nameof(Adi));
                 }
             }
         }
 
         [XmlAttribute(AttributeName = "AmirAdi")]
-        public string AmirAdi {
-            get => amirAdi; set {
+        public string AmirAdi
+        {
+            get;
+            set
+            {
 
-                if (amirAdi != value)
+                if (field != value)
                 {
-                    amirAdi = value;
+                    field = value;
                     OnPropertyChanged(nameof(AmirAdi));
                 }
             }
         }
 
         [XmlAttribute(AttributeName = "AmirSoyadi")]
-        public string AmirSoyadi {
-            get => amirSoyadi; set {
+        public string AmirSoyadi
+        {
+            get;
+            set
+            {
 
-                if (amirSoyadi != value)
+                if (field != value)
                 {
-                    amirSoyadi = value;
+                    field = value;
                     OnPropertyChanged(nameof(AmirSoyadi));
                 }
             }
         }
 
         [XmlAttribute(AttributeName = "AmirUnvani")]
-        public string AmirUnvani {
-            get => amirUnvani; set {
+        public string AmirUnvani
+        {
+            get;
+            set
+            {
 
-                if (amirUnvani != value)
+                if (field != value)
                 {
-                    amirUnvani = value;
+                    field = value;
                     OnPropertyChanged(nameof(AmirUnvani));
                 }
             }
         }
 
         [XmlElement(ElementName = "Kişi")]
-        public ObservableCollection<Kişi> Kişi {
-            get => kişi;
+        public ObservableCollection<Kişi> Kişi
+        {
+            get;
 
-            set {
-                if (kişi != value)
+            set
+            {
+                if (field != value)
                 {
-                    kişi = value;
+                    field = value;
                     OnPropertyChanged(nameof(Kişi));
                 }
             }
-        }
+        } = [];
 
         [XmlAttribute(AttributeName = "Logo")]
-        public string Logo {
-            get => logo; set {
+        public string Logo
+        {
+            get;
+            set
+            {
 
-                if (logo != value)
+                if (field != value)
                 {
-                    logo = value;
+                    field = value;
                     OnPropertyChanged(nameof(Logo));
                 }
             }
         }
 
-        public object ToLiquid()
-        {
-            return new {
-                Adi,
-                AmirAdi,
-                AmirSoyadi,
-                AmirUnvani,
-                Logo,
-            };
-        }
-
-        private string adi;
-
-        private string amirAdi;
-
-        private string amirSoyadi;
-
-        private string amirUnvani;
-
-        private ObservableCollection<Kişi> kişi = new();
-
-        private string logo;
+        public object ToLiquid() => new { Adi, AmirAdi, AmirSoyadi, AmirUnvani, Logo, };
     }
 }

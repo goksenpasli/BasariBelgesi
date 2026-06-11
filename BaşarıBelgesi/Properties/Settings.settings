@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="GövdeYazıTipi" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Segoe UI</Value>
+      <Value Profile="(Default)">Times New Roman</Value>
     </Setting>
     <Setting Name="GövdeYazıTipiSize" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">20</Value>
