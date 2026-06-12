@@ -9,8 +9,6 @@ namespace BaşarıBelgesi
 {
     public class Kişi : InpcBase, ILiquidizable, IDataErrorInfo
     {
-        public Kişi() { PropertyChanged += Kişi_PropertyChanged; }
-
         [XmlAttribute(AttributeName = "Adi")]
         public string Adi
         {
@@ -52,7 +50,7 @@ namespace BaşarıBelgesi
                 {
                     field = value;
                     OnPropertyChanged(nameof(BasariBelgeTipi));
-                    OnPropertyChanged(nameof(BasariBelgeAciklama));
+
                 }
             }
         }
@@ -99,7 +97,7 @@ namespace BaşarıBelgesi
                     OnPropertyChanged(nameof(Gerekçe));
                 }
             }
-        } = "Kamu kaynağında önemli ölçüde tasarruf sağlanması Sunulan hizmetlerin etkinlik ve kalitesinin yükseltilmesi";
+        } = "Kamu kaynağında önemli ölçüde tasarruf sağlanması Sunulan hizmetlerin etkinlik ve kalitesinin yükseltilmesi.";
 
         [XmlAttribute(AttributeName = "GorevYeri")]
         public string GorevYeri
@@ -237,13 +235,5 @@ namespace BaşarıBelgesi
         }
 
         public object ToLiquid() => new { Adi, Soyadi, BasariBelgeAciklama, BasariBelgeTipi, GorevYeri, Resim, Unvan, TC, Gerekçe, EvrakSayı, EvrakTarih };
-
-        private void Kişi_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == nameof(BasariBelgeTipi))
-            {
-                BasariBelgeAciklama = $"Görevli olduğunuz kurumda üstün görev ve sorumluluk anlayışıyla görevinizi ifa etmeniz, kendi sorumluluklarınızdaki iş ve işlemleri titizlikle takip ederek, kamu hizmetlerinin hızlı ve vatandaş memnuniyetini önde tutarak yürütülmesi yönündeki başarılı çalışmalarınızdan dolayı sizi 657 sayılı Devlet Memurları Kanunu’ nun 122. Maddesi uyarınca {BasariBelgeTipi} ile taltif eder, başarılı çalışmalarınızın devamını dilerim.";
-            }
-        }
     }
 }

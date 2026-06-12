@@ -48,18 +48,19 @@
                         <HeaderedContentControl Header="AMİR UNVANI">
                             <TextBox Text="{Binding Kurum.AmirUnvani, UpdateSourceTrigger=PropertyChanged}" />
                         </HeaderedContentControl>
-                        <Button Command="{Binding AddLogo}" Content="LOGO EKLE" />
-                        <Button Command="{Binding AddKurum}" Content="EKLE" />
+                        <Button Command="{Binding AddLogo}" Content="KURUM LOGO YÜKLE" />
+                        <Button Command="{Binding AddKurum}" Content="KURUM EKLE" />
                         <GroupBox Height="180" Header="KURUMLAR">
                             <ListBox d:ItemsSource="{d:SampleData ItemCount=2}"
                                 ItemsSource="{Binding Kurumlar.Kurum}"
-                                SelectedItem="{Binding SeçiliKurum}">
+                                SelectedItem="{Binding SeçiliKurum, ValidatesOnDataErrors=True}">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
                                         <StackPanel>
                                             <Image Width="64"
                                                 Height="64"
                                                 d:Source="App.ico"
+                                                RenderOptions.BitmapScalingMode="Fant"
                                                 Source="{Binding Logo, Mode=OneWay, Converter={StaticResource ByteToImageConverter}}" />
                                             <TextBox VerticalAlignment="Center" Text="{Binding Adi, UpdateSourceTrigger=PropertyChanged}" />
                                             <UniformGrid Columns="3">
@@ -99,12 +100,17 @@
                             <TextBox Text="{Binding Kişi.Unvan, UpdateSourceTrigger=PropertyChanged}" />
                         </HeaderedContentControl>
                         <HeaderedContentControl Header="BAŞARI BELGE TİPİ">
-                            <ComboBox IsEditable="True"
-                                SelectedIndex="0"
-                                SelectedItem="{Binding Kişi.BasariBelgeTipi, UpdateSourceTrigger=PropertyChanged}">
-                                <System:String>BAŞARI BELGESİ</System:String>
-                                <System:String>ÜSTÜN BAŞARI BELGESİ</System:String>
-                            </ComboBox>
+                            <UniformGrid Columns="2">
+                                <ComboBox IsEditable="True"
+                                    SelectedIndex="0"
+                                    SelectedItem="{Binding Kişi.BasariBelgeTipi, UpdateSourceTrigger=PropertyChanged}">
+                                    <System:String>BAŞARI BELGESİ</System:String>
+                                    <System:String>ÜSTÜN BAŞARI BELGESİ</System:String>
+                                </ComboBox>
+                                <Button Command="{Binding SetBaşarı}"
+                                    CommandParameter="{Binding Kişi}"
+                                    Content="HIZLI METİN EKLE" />
+                            </UniformGrid>
                         </HeaderedContentControl>
                         <HeaderedContentControl Header="AÇIKLAMA">
                             <TextBox Height="100"
@@ -121,7 +127,7 @@
                             <TextBox Text="{Binding Kişi.EvrakSayı, UpdateSourceTrigger=PropertyChanged}" />
                         </HeaderedContentControl>
                         <HeaderedContentControl Header="GEREKÇE">
-                            <TextBox Text="{Binding Kişi.Gerekçe, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBox Text="{Binding Kişi.Gerekçe, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" />
                         </HeaderedContentControl>
                         <Button Command="{Binding AddKişi}" Content="EKLE" />
                     </StackPanel>
@@ -175,21 +181,7 @@
                     <DataGridTextColumn Binding="{Binding Adi, UpdateSourceTrigger=PropertyChanged}" Header="ADI" />
                     <DataGridTextColumn Binding="{Binding Soyadi, UpdateSourceTrigger=PropertyChanged}" Header="SOYADI" />
                     <DataGridTextColumn Binding="{Binding Unvan, UpdateSourceTrigger=PropertyChanged}" Header="ÜNVAN" />
-                    <DataGridTemplateColumn Header="BAŞARI BELGE TİPİ">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding BasariBelgeTipi}" TextWrapping="Wrap" />
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                        <DataGridTemplateColumn.CellEditingTemplate>
-                            <DataTemplate>
-                                <ComboBox IsEditable="True" SelectedItem="{Binding BasariBelgeTipi, UpdateSourceTrigger=PropertyChanged}">
-                                    <System:String>BAŞARI BELGESİ</System:String>
-                                    <System:String>ÜSTÜN BAŞARI BELGESİ</System:String>
-                                </ComboBox>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellEditingTemplate>
-                    </DataGridTemplateColumn>
+
                     <DataGridTemplateColumn Width="300" Header="AÇIKLAMA">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
@@ -230,7 +222,7 @@
             </DataGrid>
             <UniformGrid Grid.Row="1" Rows="3">
                 <TextBlock VerticalAlignment="Center" Text="GÖVDE YAZI TİPİ" />
-                <UniformGrid Columns="2">
+                <UniformGrid Columns="3">
                     <ComboBox VerticalContentAlignment="Center"
                         ItemsSource="{Binding Source={x:Static Fonts.SystemFontFamilies}}"
                         SelectedValue="{Binding GövdeYazıTipi, Mode=TwoWay, Source={x:Static properties:Settings.Default}, UpdateSourceTrigger=PropertyChanged}"
@@ -246,14 +238,23 @@
                             </ItemsPanelTemplate>
                         </ComboBox.ItemsPanel>
                     </ComboBox>
-                    <ComboBox ItemsSource="{Binding FontSize, Mode=OneWay}" SelectedValue="{Binding GövdeYazıTipiSize, Mode=TwoWay, Source={x:Static properties:Settings.Default}, UpdateSourceTrigger=PropertyChanged}" />
+                    <ComboBox ItemsSource="{Binding FontSize, Mode=OneWay}" SelectedItem="{Binding GövdeYazıTipiSize, Mode=TwoWay, Source={x:Static properties:Settings.Default}, UpdateSourceTrigger=PropertyChanged}" />
+                    <ComboBox SelectedIndex="0" SelectedItem="{Binding GövdeYazıStyle, Mode=TwoWay, Source={x:Static properties:Settings.Default}, UpdateSourceTrigger=PropertyChanged}">
+                        <System:String>Normal</System:String>
+                        <System:String>Italic</System:String>
+                    </ComboBox>
                 </UniformGrid>
-                <Button Command="{Binding Sakla}" Content="AYARLARI SAKLA" />
+                <Button Command="{Binding Sakla}" Content="VERİLERİ KAYDET" />
                 <Button Command="{Binding ŞablonGöster}" Content="EXCEL ŞABLONU AL" />
                 <Button Command="{Binding ExceldenAl}" Content="EXCELDEN VERİ AL" />
-                <Button Command="{Binding BaşarıBelgesiÇıkar}"
-                    CommandParameter="{Binding ElementName=Dg}"
-                    Content="BAŞARI BELGESİ ÇIKAR" />
+                <UniformGrid Columns="2">
+                    <Button Command="{Binding BaşarıBelgesiÇıkar}"
+                        CommandParameter="{Binding ElementName=Dg}"
+                        Content="BAŞARI BELGESİ GÖSTER" />
+                    <Button Command="{Binding PdfBaşarıBelgesiÇıkar}"
+                        CommandParameter="{Binding ElementName=Dg}"
+                        Content="PDF BAŞARI BELGESİ ÇIKAR" />
+                </UniformGrid>
             </UniformGrid>
         </Grid>
     </Grid>

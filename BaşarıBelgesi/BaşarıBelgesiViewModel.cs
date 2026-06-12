@@ -2,6 +2,7 @@
 using DotLiquid;
 using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Dialogs;
+using PdfSharp.Xps;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -12,7 +13,6 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
-using System.IO.Packaging;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -20,13 +20,13 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Interop;
 using System.Windows.Markup;
+using System.Windows.Xps;
 using System.Windows.Xps.Packaging;
-using System.Windows.Xps.Serialization;
 using dotTemplate = DotLiquid.Template;
 
 namespace BaşarıBelgesi
 {
-    public class BaşarıBelgesiViewModel : InpcBase
+    public class BaşarıBelgesiViewModel : InpcBase, IDataErrorInfo
     {
         public BaşarıBelgesiViewModel()
         {
@@ -56,8 +56,7 @@ namespace BaşarıBelgesi
                     Kurumlar.Serialize();
                 },
                 parameter => SeçiliKurum is not null &&
-                !string.IsNullOrWhiteSpace(Kişi.Adi) &&
-                !string.IsNullOrWhiteSpace(Kişi.TC) &&
+                Kişi.TcDoğrula(Kişi.TC).IsValid &&
                 !string.IsNullOrWhiteSpace(Kişi.BasariBelgeAciklama) &&
                 !string.IsNullOrWhiteSpace(Kişi.BasariBelgeTipi) &&
                 !string.IsNullOrWhiteSpace(Kişi.GorevYeri) &&
@@ -99,6 +98,16 @@ namespace BaşarıBelgesi
 
             Sakla = new RelayCommand<object>(parameter => Kurumlar.Serialize(), parameter => true);
 
+            SetBaşarı = new RelayCommand<object>(
+                parameter =>
+                {
+                    if (parameter is Kişi kişi)
+                    {
+                        kişi.BasariBelgeAciklama = $"Görevli olduğunuz kurumda üstün görev ve sorumluluk anlayışıyla görevinizi ifa etmeniz, kendi sorumluluklarınızdaki iş ve işlemleri titizlikle takip ederek, kamu hizmetlerinin hızlı ve vatandaş memnuniyetini önde tutarak yürütülmesi yönündeki başarılı çalışmalarınızdan dolayı sizi 657 sayılı Devlet Memurları Kanunu’nun 122. Maddesi uyarınca {kişi.BasariBelgeTipi} ile taltif eder, başarılı çalışmalarınızın devamını dilerim.";
+                    }
+                },
+                parameter => true);
+
             KişiTümünüSeç = new RelayCommand<object>(
                 parameter =>
                 {
@@ -123,6 +132,7 @@ namespace BaşarıBelgesi
                             InstructionText = "TC Nolarda Hatalı TC Var."
                         };
                         _ = dialog.Show();
+                        return;
                     }
                     if (File.Exists("report.lqd"))
                     {
@@ -130,7 +140,7 @@ namespace BaşarıBelgesi
                         Kurum kurum = SeçiliKurum;
                         if (data != null)
                         {
-                            Hash günlükrapor = Hash.FromAnonymousObject(new { Kişi = data, Kurum = kurum, Settings.Default.GövdeYazıTipi, Settings.Default.GövdeYazıTipiSize, });
+                            Hash günlükrapor = Hash.FromAnonymousObject(new { Kişi = data, Kurum = kurum, Settings.Default.GövdeYazıTipi, Settings.Default.GövdeYazıTipiSize, Settings.Default.GövdeYazıStyle });
                             string template = GenerateTemplate(günlükrapor, "report.lqd");
                             IDocumentPaginatorSource fd = (FixedDocument)XamlReader.Parse(template);
                             DocumentViewModel.Document = fd;
@@ -141,6 +151,52 @@ namespace BaşarıBelgesi
                             fd = null;
                             template = null;
                             t.Show();
+                            GC.Collect();
+                        }
+                    }
+                },
+                parameter => SeçiliKurum?.Kişi.Any(z => z.Seçili) == true);
+
+            PdfBaşarıBelgesiÇıkar = new RelayCommand<object>(
+                parameter =>
+                {
+                    if (parameter is DataGrid dataGrid && HasValidationErrors(dataGrid))
+                    {
+                        TaskDialog dialog = new()
+                        {
+                            OwnerWindowHandle = new WindowInteropHelper(Application.Current.MainWindow).Handle,
+                            Caption = Application.Current.MainWindow.Title,
+                            Icon = TaskDialogStandardIcon.Warning,
+                            Text = "Hatalı Kayıtlar Vardır.",
+                            InstructionText = "TC Nolarda Hatalı TC Var."
+                        };
+                        _ = dialog.Show();
+                        return;
+                    }
+                    if (File.Exists("report.lqd"))
+                    {
+                        IEnumerable<Kişi> data = SeçiliKurum?.Kişi.Where(z => z.Seçili);
+                        Kurum kurum = SeçiliKurum;
+                        if (data != null)
+                        {
+                            Hash günlükrapor = Hash.FromAnonymousObject(new { Kişi = data, Kurum = kurum, Settings.Default.GövdeYazıTipi, Settings.Default.GövdeYazıTipiSize, Settings.Default.GövdeYazıStyle });
+                            string template = GenerateTemplate(günlükrapor, "report.lqd");
+                            IDocumentPaginatorSource fd = (FixedDocument)XamlReader.Parse(template);
+                            DocumentViewModel.Document = fd;
+                            DocumentViewModel.Başlık = "RAPOR";
+                            string xpsfilepath = $"{Path.GetTempPath()}{Guid.NewGuid()}.xps";
+                            SaveToXps(fd, xpsfilepath);
+                            string pdfPath = $"{Path.GetTempPath()}{Guid.NewGuid()}.pdf";
+                            XpsConverter.Convert(xpsfilepath, pdfPath, 0);
+                            if (File.Exists(pdfPath))
+                            {
+                                _ = Process.Start(new ProcessStartInfo(pdfPath) { UseShellExecute = true });
+                                File.Delete(xpsfilepath);
+                            }
+                            data = null;
+                            günlükrapor = null;
+                            fd = null;
+                            template = null;
                             GC.Collect();
                         }
                     }
@@ -200,6 +256,8 @@ namespace BaşarıBelgesi
 
         public DocumentViewModel DocumentViewModel { get; }
 
+        public string Error => string.Empty;
+
         public RelayCommand<object> ExceldenAl { get; }
 
         public IEnumerable<int> FontSize { get; } = Enumerable.Range(8, 17);
@@ -211,6 +269,8 @@ namespace BaşarıBelgesi
         public Kurum Kurum { get; set; }
 
         public Kurumlar Kurumlar { get; set; }
+
+        public RelayCommand<object> PdfBaşarıBelgesiÇıkar { get; }
 
         public RelayCommand<object> Sakla { get; }
 
@@ -242,6 +302,8 @@ namespace BaşarıBelgesi
             }
         }
 
+        public RelayCommand<object> SetBaşarı { get; private set; }
+
         public RelayCommand<object> ŞablonGöster { get; }
 
         public bool TümüSeçili
@@ -257,6 +319,12 @@ namespace BaşarıBelgesi
                 }
             }
         }
+
+        public string this[string columnName] => columnName switch
+        {
+            "SeçiliKurum" when SeçiliKurum is null => "Lütfen Bir Kurum Seçiniz.",
+            _ => null
+        };
 
         public ObservableCollection<Kurum> DataYükle()
         {
@@ -280,21 +348,6 @@ namespace BaşarıBelgesi
                 _ = MessageBox.Show(ex.Message, Application.Current?.MainWindow?.Title, MessageBoxButton.OK, MessageBoxImage.Error);
                 return null;
             }
-        }
-
-        public FixedDocumentSequence WriteXPS(FlowDocument flowDocument)
-        {
-            Package package = Package.Open(new MemoryStream(), FileMode.Create, FileAccess.ReadWrite);
-            Uri packUri = new("pack://temp.xps");
-            PackageStore.RemovePackage(packUri);
-            PackageStore.AddPackage(packUri, package);
-            using XpsDocument xpsDocument = new(package, CompressionOption.SuperFast, packUri.ToString());
-            DocumentPaginator paginator = ((IDocumentPaginatorSource)flowDocument).DocumentPaginator;
-            using (XpsSerializationManager xpsSerializationManager = new(new XpsPackagingPolicy(xpsDocument), false))
-            {
-                xpsSerializationManager.SaveAsXaml(paginator);
-            }
-            return xpsDocument.GetFixedDocumentSequence();
         }
 
         private IEnumerable<Kişi> CSVKişiler(string dosyayolu)
@@ -355,6 +408,15 @@ namespace BaşarıBelgesi
             return false;
         }
 
+        private void SaveToXps(IDocumentPaginatorSource document, string filePath)
+        {
+            using XpsDocument xpsDocument = new(filePath, FileAccess.ReadWrite);
+
+            XpsDocumentWriter writer = XpsDocument.CreateXpsDocumentWriter(xpsDocument);
+
+            writer.Write(document.DocumentPaginator);
+        }
+
         private string SetImage(string imagePath, ImageFormat format)
         {
             const int maxWidth = 240;
@@ -382,7 +444,7 @@ namespace BaşarıBelgesi
                 Caption = Application.Current.MainWindow.Title,
                 Icon = TaskDialogStandardIcon.Information,
                 Text = "Excel Dosyasını Doldurun.",
-                InstructionText = "Oluşturulan Dosyada İlk Satırları Silmeden Verileri İşleyin Microsoft Excel Virgülle Ayrılmış Değerler Dosyası (*.csv) Olarak Kaydedip Yükleyin."
+                InstructionText = "Oluşturulan Dosyada İlk Satırları Silmeden Formatı Değiştirmeden Verileri İşleyin Microsoft Excel Virgülle Ayrılmış Değerler Dosyası (*.csv) Olarak Kaydedip Yükleyin."
             };
             _ = dialog.Show();
             _ = Process.Start(dosyaismi);

@@ -46,5 +46,17 @@ namespace BaşarıBelgesi.Properties {
                 this["GövdeYazıTipiSize"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Normal")]
+        public string GövdeYazıStyle {
+            get {
+                return ((string)(this["GövdeYazıStyle"]));
+            }
+            set {
+                this["GövdeYazıStyle"] = value;
+            }
+        }
     }
 }

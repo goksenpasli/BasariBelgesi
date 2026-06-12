@@ -132,7 +132,7 @@
                        TextWrapping="Wrap"
                        FontFamily="{{GövdeYazıTipi}}"
                        FontSize="{{GövdeYazıTipiSize}}"
-                       FontStyle="Italic">
+                       FontStyle="{{GövdeYazıStyle}}">
                            &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;
     {{kişi.BasariBelgeAciklama}}
 </TextBlock>
@@ -145,8 +145,7 @@
                        Width="250"  
                        TextAlignment="Center"
                        FontWeight="Bold">
-                <Run Text="{{kurum.AmirAdi}}" />
-                <Run Text=" {{kurum.AmirSoyadi}}" />
+                <Run Text="{{kurum.AmirAdi}}" /><Run Text=" {{kurum.AmirSoyadi}}" />
                 <LineBreak />
                 <Run Text="{{kurum.AmirUnvani}}" />
             </TextBlock>
