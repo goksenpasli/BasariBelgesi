@@ -26,7 +26,7 @@ using dotTemplate = DotLiquid.Template;
 
 namespace BaşarıBelgesi
 {
-    public class BaşarıBelgesiViewModel : InpcBase, IDataErrorInfo
+    public class BaşarıBelgesiViewModel : InpcBase, IDataErrorInfo, ILiquidizable
     {
         public BaşarıBelgesiViewModel()
         {
@@ -36,6 +36,7 @@ namespace BaşarıBelgesi
             Kurum = new Kurum();
             DocumentViewModel = new DocumentViewModel();
             Kurumlar = new Kurumlar() { Kurum = DataYükle() };
+            Background = ResourceImageToBase64("background.jpg");
             AddKişi = new RelayCommand<object>(
                 parameter =>
                 {
@@ -96,6 +97,21 @@ namespace BaşarıBelgesi
                 },
                 parameter => SeçiKişi is not null);
 
+            SetBackgroundImage = new RelayCommand<object>(
+                parameter =>
+                {
+                    CommonOpenFileDialog openFileDialog = new() { Filters = { new CommonFileDialogFilter("Resim Dosyaları", "*.jpg;*.jpeg;*.jfif;*.jpe;*.png;*.gif;*.tif;*.tiff;*.bmp;*.dib;*.rle;") }, Multiselect = false };
+                    if (openFileDialog.ShowDialog() == CommonFileDialogResult.Ok)
+                    {
+                        Background = LoadImageToBase64(openFileDialog.FileName);
+                    }
+                },
+                parameter => true);
+
+            OpenDataBaseFolder = new RelayCommand<object>(parameter => Process.Start("explorer.exe", $"/select,\"{XmlDataPath}\""), parameter => true);
+
+            SetDefaultImage = new RelayCommand<object>(parameter => Background = ResourceImageToBase64("background.jpg"), parameter => true);
+
             Sakla = new RelayCommand<object>(parameter => Kurumlar.Serialize(), parameter => true);
 
             SetBaşarı = new RelayCommand<object>(
@@ -140,7 +156,7 @@ namespace BaşarıBelgesi
                         Kurum kurum = SeçiliKurum;
                         if (data != null)
                         {
-                            Hash günlükrapor = Hash.FromAnonymousObject(new { Kişi = data, Kurum = kurum, Settings.Default.GövdeYazıTipi, Settings.Default.GövdeYazıTipiSize, Settings.Default.GövdeYazıStyle });
+                            Hash günlükrapor = Hash.FromAnonymousObject(new { Kişi = data, Kurum = kurum, Settings.Default.GövdeYazıTipi, Settings.Default.GövdeYazıTipiSize, Settings.Default.GövdeYazıStyle, Background });
                             string template = GenerateTemplate(günlükrapor, "report.lqd");
                             IDocumentPaginatorSource fd = (FixedDocument)XamlReader.Parse(template);
                             DocumentViewModel.Document = fd;
@@ -179,7 +195,7 @@ namespace BaşarıBelgesi
                         Kurum kurum = SeçiliKurum;
                         if (data != null)
                         {
-                            Hash günlükrapor = Hash.FromAnonymousObject(new { Kişi = data, Kurum = kurum, Settings.Default.GövdeYazıTipi, Settings.Default.GövdeYazıTipiSize, Settings.Default.GövdeYazıStyle });
+                            Hash günlükrapor = Hash.FromAnonymousObject(new { Kişi = data, Kurum = kurum, Settings.Default.GövdeYazıTipi, Settings.Default.GövdeYazıTipiSize, Settings.Default.GövdeYazıStyle, Background });
                             string template = GenerateTemplate(günlükrapor, "report.lqd");
                             IDocumentPaginatorSource fd = (FixedDocument)XamlReader.Parse(template);
                             DocumentViewModel.Document = fd;
@@ -212,6 +228,21 @@ namespace BaşarıBelgesi
                     WriteCsvFile(metin);
                 },
                 parameter => true);
+
+            ResimKaydet = new RelayCommand<object>(
+                parameter =>
+                {
+                    if (parameter is Kişi kişi && !string.IsNullOrWhiteSpace(kişi.Resim))
+                    {
+                        SaveFileDialog saveFileDialog = new() { Filter = "JPEG Resim Dosyası (*.jpg)|*.jpg", FileName = $"{kişi.Adi}_{kişi.Soyadi}_Resim.jpg" };
+                        if (saveFileDialog.ShowDialog() == true)
+                        {
+                            byte[] imageBytes = Convert.FromBase64String(kişi.Resim);
+                            File.WriteAllBytes(saveFileDialog.FileName, imageBytes);
+                        }
+                    }
+                },
+                parameter => parameter is Kişi kişi && !string.IsNullOrWhiteSpace(kişi.Resim));
 
             ExceldenAl = new RelayCommand<object>(
                 parameter =>
@@ -252,6 +283,19 @@ namespace BaşarıBelgesi
 
         public RelayCommand<object> AddLogo { get; }
 
+        public string Background
+        {
+            get;
+            set
+            {
+                if (field != value)
+                {
+                    field = value;
+                    OnPropertyChanged(nameof(Background));
+                }
+            }
+        }
+
         public RelayCommand<object> BaşarıBelgesiÇıkar { get; }
 
         public DocumentViewModel DocumentViewModel { get; }
@@ -260,7 +304,7 @@ namespace BaşarıBelgesi
 
         public RelayCommand<object> ExceldenAl { get; }
 
-        public IEnumerable<int> FontSize { get; } = Enumerable.Range(8, 17);
+        public IEnumerable<int> FontSize { get; } = Enumerable.Range(8, 25);
 
         public Kişi Kişi { get; set; }
 
@@ -270,7 +314,11 @@ namespace BaşarıBelgesi
 
         public Kurumlar Kurumlar { get; set; }
 
+        public RelayCommand<object> OpenDataBaseFolder { get; }
+
         public RelayCommand<object> PdfBaşarıBelgesiÇıkar { get; }
+
+        public RelayCommand<object> ResimKaydet { get; }
 
         public RelayCommand<object> Sakla { get; }
 
@@ -302,7 +350,11 @@ namespace BaşarıBelgesi
             }
         }
 
-        public RelayCommand<object> SetBaşarı { get; private set; }
+        public RelayCommand<object> SetBackgroundImage { get; }
+
+        public RelayCommand<object> SetBaşarı { get; }
+
+        public RelayCommand<object> SetDefaultImage { get; }
 
         public RelayCommand<object> ŞablonGöster { get; }
 
@@ -348,6 +400,32 @@ namespace BaşarıBelgesi
                 _ = MessageBox.Show(ex.Message, Application.Current?.MainWindow?.Title, MessageBoxButton.OK, MessageBoxImage.Error);
                 return null;
             }
+        }
+
+        public object ToLiquid() => new { Background };
+
+        private static string LoadImageToBase64(string filepath)
+        {
+            byte[] bytes = File.ReadAllBytes(filepath);
+            using MemoryStream ms = new(bytes);
+            return Convert.ToBase64String(ms.ToArray());
+        }
+
+        private static string ResourceImageToBase64(string resourceKey)
+        {
+            if (DesignerProperties.GetIsInDesignMode(new DependencyObject()))
+            {
+                return string.Empty;
+            }
+            Uri uri = new(resourceKey, UriKind.Relative);
+            using Stream stream = Application.GetResourceStream(uri).Stream;
+            if (stream is not null)
+            {
+                using MemoryStream ms = new();
+                stream.CopyTo(ms);
+                return Convert.ToBase64String(ms.ToArray());
+            }
+            return string.Empty;
         }
 
         private IEnumerable<Kişi> CSVKişiler(string dosyayolu)
