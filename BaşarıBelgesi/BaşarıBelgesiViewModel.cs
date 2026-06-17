@@ -16,7 +16,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows;
-using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Interop;
 using System.Windows.Markup;
@@ -37,6 +37,7 @@ namespace BaşarıBelgesi
             DocumentViewModel = new DocumentViewModel();
             Kurumlar = new Kurumlar() { Kurum = DataYükle() };
             Background = ResourceImageToBase64("background.jpg");
+            PropertyChanged += BaşarıBelgesiViewModel_PropertyChanged;
             AddKişi = new RelayCommand<object>(
                 parameter =>
                 {
@@ -137,7 +138,7 @@ namespace BaşarıBelgesi
             BaşarıBelgesiÇıkar = new RelayCommand<object>(
                 parameter =>
                 {
-                    if (parameter is DataGrid dataGrid && HasValidationErrors(dataGrid))
+                    if (HasErrors)
                     {
                         TaskDialog dialog = new()
                         {
@@ -167,7 +168,6 @@ namespace BaşarıBelgesi
                             fd = null;
                             template = null;
                             t.Show();
-                            GC.Collect();
                         }
                     }
                 },
@@ -176,7 +176,7 @@ namespace BaşarıBelgesi
             PdfBaşarıBelgesiÇıkar = new RelayCommand<object>(
                 parameter =>
                 {
-                    if (parameter is DataGrid dataGrid && HasValidationErrors(dataGrid))
+                    if (HasErrors)
                     {
                         TaskDialog dialog = new()
                         {
@@ -213,7 +213,6 @@ namespace BaşarıBelgesi
                             günlükrapor = null;
                             fd = null;
                             template = null;
-                            GC.Collect();
                         }
                     }
                 },
@@ -243,6 +242,27 @@ namespace BaşarıBelgesi
                     }
                 },
                 parameter => parameter is Kişi kişi && !string.IsNullOrWhiteSpace(kişi.Resim));
+
+            ResimSil = new RelayCommand<object>(
+                parameter =>
+                {
+                    if (parameter is Kişi kişi && !string.IsNullOrWhiteSpace(kişi.Resim))
+                    {
+                        kişi.Resim = null;
+                    }
+                },
+                parameter => parameter is Kişi kişi && !string.IsNullOrWhiteSpace(kişi.Resim));
+
+            KişiSil = new RelayCommand<object>(
+                parameter =>
+                {
+                    if (parameter is Kişi kişi && MessageBox.Show("KİŞİ SİL", "Başarı Belgesi", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes)
+                    {
+                        _ = SeçiliKurum.Kişi.Remove(kişi);
+                        Kurumlar.Serialize();
+                    }
+                },
+                parameter => parameter is Kişi);
 
             ExceldenAl = new RelayCommand<object>(
                 parameter =>
@@ -283,6 +303,19 @@ namespace BaşarıBelgesi
 
         public RelayCommand<object> AddLogo { get; }
 
+        public string Arama
+        {
+            get;
+            set
+            {
+                if (field != value)
+                {
+                    field = value;
+                    OnPropertyChanged(nameof(Arama));
+                }
+            }
+        }
+
         public string Background
         {
             get;
@@ -298,6 +331,19 @@ namespace BaşarıBelgesi
 
         public RelayCommand<object> BaşarıBelgesiÇıkar { get; }
 
+        public CollectionViewSource Cvs
+        {
+            get;
+            set
+            {
+                if (field != value)
+                {
+                    field = value;
+                    OnPropertyChanged(nameof(Cvs));
+                }
+            }
+        }
+
         public DocumentViewModel DocumentViewModel { get; }
 
         public string Error => string.Empty;
@@ -306,7 +352,11 @@ namespace BaşarıBelgesi
 
         public IEnumerable<int> FontSize { get; } = Enumerable.Range(8, 25);
 
+        public bool HasErrors => SeçiliKurum?.Kişi?.Any(p => !p.TcDoğrula(p.TC).IsValid) == true;
+
         public Kişi Kişi { get; set; }
+
+        public RelayCommand<object> KişiSil { get; }
 
         public RelayCommand<object> KişiTümünüSeç { get; }
 
@@ -319,6 +369,8 @@ namespace BaşarıBelgesi
         public RelayCommand<object> PdfBaşarıBelgesiÇıkar { get; }
 
         public RelayCommand<object> ResimKaydet { get; }
+
+        public RelayCommand<object> ResimSil { get; }
 
         public RelayCommand<object> Sakla { get; }
 
@@ -428,6 +480,14 @@ namespace BaşarıBelgesi
             return string.Empty;
         }
 
+        private void BaşarıBelgesiViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(Arama))
+            {
+                _ = !string.IsNullOrWhiteSpace(Arama) ? (Cvs?.View?.Filter = item => item is Kişi kişi && kişi.Adi.StartsWith(Arama, StringComparison.OrdinalIgnoreCase)) : (Cvs?.View?.Filter = null);
+            }
+        }
+
         private IEnumerable<Kişi> CSVKişiler(string dosyayolu)
         {
             string[] satırlar = File.ReadAllLines(dosyayolu, Encoding.Default);
@@ -471,21 +531,6 @@ namespace BaşarıBelgesi
             return template.Render(docContext);
         }
 
-        private bool HasValidationErrors(DataGrid dataGrid)
-        {
-            foreach (object item in dataGrid.Items)
-            {
-                ReadOnlyObservableCollection<ValidationError> validationResult = Validation.GetErrors(dataGrid.ItemContainerGenerator.ContainerFromItem(item));
-
-                if (validationResult.Count > 0)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         private void SaveToXps(IDocumentPaginatorSource document, string filePath)
         {
             using XpsDocument xpsDocument = new(filePath, FileAccess.ReadWrite);
@@ -498,7 +543,7 @@ namespace BaşarıBelgesi
         private string SetImage(string imagePath, ImageFormat format)
         {
             const int maxWidth = 240;
-            using System.Drawing.Image image = System.Drawing.Image.FromFile(imagePath);
+            using Image image = Image.FromFile(imagePath);
             int newWidth = image.Width;
             int newHeight = image.Height;
             if (newWidth > maxWidth)
@@ -506,7 +551,7 @@ namespace BaşarıBelgesi
                 newWidth = maxWidth;
                 newHeight = (int)(image.Height * (float)maxWidth / image.Width);
             }
-            using System.Drawing.Image resizedImage = new Bitmap(image, newWidth, newHeight);
+            using Image resizedImage = new Bitmap(image, newWidth, newHeight);
             MemoryStream memoryStream = new();
             resizedImage.Save(memoryStream, format);
             return Convert.ToBase64String(memoryStream.ToArray());

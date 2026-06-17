@@ -10,27 +10,41 @@ namespace BaşarıBelgesi
 {
     public class ByteToImageConverter : IValueConverter
     {
+        private static readonly bool IsDesignMode = DesignerProperties.GetIsInDesignMode(new DependencyObject());
+
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (DesignerProperties.GetIsInDesignMode(new DependencyObject()))
+            if (IsDesignMode)
             {
                 return null;
             }
-            if (value is string base64 && !string.IsNullOrWhiteSpace(base64))
+
+            if (value is not string base64 || string.IsNullOrWhiteSpace(base64))
             {
-                BitmapImage bi = new();
-                bi.BeginInit();
-                byte[] buffer = System.Convert.FromBase64String(base64);
-                bi.StreamSource = new MemoryStream(buffer);
-                bi.CacheOption = BitmapCacheOption.None;
-                bi.CreateOptions = BitmapCreateOptions.IgnoreColorProfile | BitmapCreateOptions.DelayCreation;
-                bi.EndInit();
-                bi.Freeze();
-                return bi;
+                return null;
             }
-            return null;
+
+            try
+            {
+                byte[] buffer = System.Convert.FromBase64String(base64);
+                BitmapImage image = new();
+                using (MemoryStream stream = new(buffer))
+                {
+                    image.BeginInit();
+                    image.CacheOption = BitmapCacheOption.OnLoad;
+                    image.CreateOptions = BitmapCreateOptions.PreservePixelFormat;
+                    image.StreamSource = stream;
+                    image.EndInit();
+                }
+                image.Freeze();
+                return image;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotSupportedException();
     }
 }

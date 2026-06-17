@@ -15,6 +15,7 @@
     WindowState="Maximized"
     mc:Ignorable="d">
     <Window.Resources>
+        <CollectionViewSource x:Key="Kurumlar" Source="{Binding SeçiliKurum.Kişi}" />
         <Style TargetType="TextBox">
             <Style.Triggers>
                 <Trigger Property="Validation.HasError" Value="True">
@@ -146,26 +147,42 @@
                 </ScrollViewer>
             </GroupBox>
         </Grid>
-        <Grid Grid.Column="1">
+        <Grid Grid.Column="1" Background="{DynamicResource BorderBackground}">
             <Grid.RowDefinitions>
                 <RowDefinition />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <DataGrid x:Name="Dg"
-                d:ItemsSource="{d:SampleData ItemCount=3}"
+            <DataGrid d:ItemsSource="{d:SampleData ItemCount=3}"
                 AutoGenerateColumns="False"
+                Background="{DynamicResource BorderBackground}"
                 CanUserAddRows="False"
                 CanUserDeleteRows="False"
-                ItemsSource="{Binding SeçiliKurum.Kişi}"
+                ItemsSource="{Binding Source={StaticResource Kurumlar}}"
                 SelectedItem="{Binding SeçiKişi}">
                 <DataGrid.Columns>
                     <DataGridCheckBoxColumn Binding="{Binding Seçili, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" CanUserSort="False">
+                        <DataGridCheckBoxColumn.ElementStyle>
+                            <Style TargetType="CheckBox">
+                                <Setter Property="VerticalAlignment" Value="Center" />
+                                <Setter Property="HorizontalAlignment" Value="Center" />
+                            </Style>
+                        </DataGridCheckBoxColumn.ElementStyle>
                         <DataGridCheckBoxColumn.HeaderTemplate>
                             <DataTemplate>
                                 <CheckBox Command="{Binding KişiTümünüSeç, Mode=OneWay, Source={StaticResource BaşarıBelgesiViewModel}}" IsChecked="{Binding TümüSeçili, Source={StaticResource BaşarıBelgesiViewModel}}" />
                             </DataTemplate>
                         </DataGridCheckBoxColumn.HeaderTemplate>
                     </DataGridCheckBoxColumn>
+                    <DataGridTemplateColumn>
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Command="{Binding KişiSil, Mode=OneWay, Source={StaticResource BaşarıBelgesiViewModel}}"
+                                    CommandParameter="{Binding}"
+                                    Content="SİL" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                     <DataGridTemplateColumn Header="RESİM">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
@@ -177,6 +194,9 @@
                                             <MenuItem Command="{Binding ResimKaydet, Source={StaticResource BaşarıBelgesiViewModel}}"
                                                 CommandParameter="{Binding}"
                                                 Header="RESİM KAYDET" />
+                                            <MenuItem Command="{Binding ResimSil, Source={StaticResource BaşarıBelgesiViewModel}}"
+                                                CommandParameter="{Binding}"
+                                                Header="RESİM SİL" />
                                         </ContextMenu>
                                     </Image.ContextMenu>
                                 </Image>
@@ -240,7 +260,11 @@
 
                 </DataGrid.Columns>
             </DataGrid>
-            <UniformGrid Grid.Row="1" Rows="3">
+            <UniformGrid Grid.Row="1" Columns="2">
+                <TextBlock Text="İSİM ARA" />
+                <TextBox Text="{Binding Arama, UpdateSourceTrigger=PropertyChanged}" />
+            </UniformGrid>
+            <UniformGrid Grid.Row="2" Rows="3">
                 <UniformGrid Columns="3">
                     <Button Command="{Binding SetBackgroundImage}" Content="ARKAPLAN RESİM" />
                     <Button Command="{Binding SetDefaultImage}" Content="VARSAYILAN RESİM" />
@@ -273,12 +297,8 @@
                 <Button Command="{Binding ExceldenAl}" Content="EXCELDEN VERİ AL" />
                 <Button Command="{Binding Sakla}" Content="VERİLERİ KAYDET" />
                 <UniformGrid Columns="2">
-                    <Button Command="{Binding BaşarıBelgesiÇıkar}"
-                        CommandParameter="{Binding ElementName=Dg}"
-                        Content="BAŞARI BELGESİ GÖSTER" />
-                    <Button Command="{Binding PdfBaşarıBelgesiÇıkar}"
-                        CommandParameter="{Binding ElementName=Dg}"
-                        Content="PDF BAŞARI BELGESİ ÇIKAR" />
+                    <Button Command="{Binding BaşarıBelgesiÇıkar}" Content="BAŞARI BELGESİ GÖSTER" />
+                    <Button Command="{Binding PdfBaşarıBelgesiÇıkar}" Content="PDF BAŞARI BELGESİ ÇIKAR" />
                 </UniformGrid>
             </UniformGrid>
         </Grid>
