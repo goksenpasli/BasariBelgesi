@@ -129,7 +129,7 @@
             <TextBlock Canvas.Left="160"
                        Canvas.Top="460"
                        Width="800"   TextAlignment="Justify"
-                       TextWrapping="Wrap"
+                       TextWrapping="Wrap" FontWeight="{{GövdeYazıBoldStyle}}"
                        FontFamily="{{GövdeYazıTipi}}"
                        FontSize="{{GövdeYazıTipiSize}}"
                        FontStyle="{{GövdeYazıStyle}}">

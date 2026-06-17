@@ -15,6 +15,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Documents;
@@ -146,7 +147,8 @@ namespace BaşarıBelgesi
                             Caption = Application.Current.MainWindow.Title,
                             Icon = TaskDialogStandardIcon.Warning,
                             Text = "Hatalı Kayıtlar Vardır.",
-                            InstructionText = "TC Nolarda Hatalı TC Var."
+                            InstructionText = "Seçili Kişilerde TC Nolarda Hatalı TC Var.",
+                            DetailsExpandedText = string.Join(Environment.NewLine, ErrorKişiler.Select(z => $"ADI: {z.Adi} SOYADI: {z.Soyadi} TC: {z.TC}"))
                         };
                         _ = dialog.Show();
                         return;
@@ -157,7 +159,8 @@ namespace BaşarıBelgesi
                         Kurum kurum = SeçiliKurum;
                         if (data != null)
                         {
-                            Hash günlükrapor = Hash.FromAnonymousObject(new { Kişi = data, Kurum = kurum, Settings.Default.GövdeYazıTipi, Settings.Default.GövdeYazıTipiSize, Settings.Default.GövdeYazıStyle, Background });
+                            Hash günlükrapor = Hash.FromAnonymousObject(
+                                new { Kişi = data, Kurum = kurum, Settings.Default.GövdeYazıTipi, Settings.Default.GövdeYazıTipiSize, Settings.Default.GövdeYazıStyle, Settings.Default.GövdeYazıBoldStyle, Background });
                             string template = GenerateTemplate(günlükrapor, "report.lqd");
                             IDocumentPaginatorSource fd = (FixedDocument)XamlReader.Parse(template);
                             DocumentViewModel.Document = fd;
@@ -174,46 +177,56 @@ namespace BaşarıBelgesi
                 parameter => SeçiliKurum?.Kişi.Any(z => z.Seçili) == true);
 
             PdfBaşarıBelgesiÇıkar = new RelayCommand<object>(
-                parameter =>
+                async parameter =>
                 {
-                    if (HasErrors)
+                    try
                     {
-                        TaskDialog dialog = new()
+                        if (HasErrors)
                         {
-                            OwnerWindowHandle = new WindowInteropHelper(Application.Current.MainWindow).Handle,
-                            Caption = Application.Current.MainWindow.Title,
-                            Icon = TaskDialogStandardIcon.Warning,
-                            Text = "Hatalı Kayıtlar Vardır.",
-                            InstructionText = "TC Nolarda Hatalı TC Var."
-                        };
-                        _ = dialog.Show();
-                        return;
-                    }
-                    if (File.Exists("report.lqd"))
-                    {
-                        IEnumerable<Kişi> data = SeçiliKurum?.Kişi.Where(z => z.Seçili);
-                        Kurum kurum = SeçiliKurum;
-                        if (data != null)
-                        {
-                            Hash günlükrapor = Hash.FromAnonymousObject(new { Kişi = data, Kurum = kurum, Settings.Default.GövdeYazıTipi, Settings.Default.GövdeYazıTipiSize, Settings.Default.GövdeYazıStyle, Background });
-                            string template = GenerateTemplate(günlükrapor, "report.lqd");
-                            IDocumentPaginatorSource fd = (FixedDocument)XamlReader.Parse(template);
-                            DocumentViewModel.Document = fd;
-                            DocumentViewModel.Başlık = "RAPOR";
-                            string xpsfilepath = $"{Path.GetTempPath()}{Guid.NewGuid()}.xps";
-                            SaveToXps(fd, xpsfilepath);
-                            string pdfPath = $"{Path.GetTempPath()}{Guid.NewGuid()}.pdf";
-                            XpsConverter.Convert(xpsfilepath, pdfPath, 0);
-                            if (File.Exists(pdfPath))
+                            TaskDialog dialog = new()
                             {
-                                _ = Process.Start(new ProcessStartInfo(pdfPath) { UseShellExecute = true });
-                                File.Delete(xpsfilepath);
-                            }
-                            data = null;
-                            günlükrapor = null;
-                            fd = null;
-                            template = null;
+                                OwnerWindowHandle = new WindowInteropHelper(Application.Current.MainWindow).Handle,
+                                Caption = Application.Current.MainWindow.Title,
+                                Icon = TaskDialogStandardIcon.Warning,
+                                Text = "Hatalı Kayıtlar Vardır.",
+                                InstructionText = "Seçili Kişilerde TC Nolarda Hatalı TC Var.",
+                                DetailsExpandedText = string.Join(Environment.NewLine, ErrorKişiler.Select(z => $"ADI: {z.Adi} SOYADI: {z.Soyadi} TC: {z.TC}"))
+                            };
+                            _ = dialog.Show();
+                            return;
                         }
+                        if (File.Exists("report.lqd"))
+                        {
+                            Indeterminate = true;
+                            IEnumerable<Kişi> data = SeçiliKurum?.Kişi.Where(z => z.Seçili);
+                            Kurum kurum = SeçiliKurum;
+                            if (data != null)
+                            {
+                                Hash günlükrapor = Hash.FromAnonymousObject(
+                                    new { Kişi = data, Kurum = kurum, Settings.Default.GövdeYazıTipi, Settings.Default.GövdeYazıTipiSize, Settings.Default.GövdeYazıStyle, Settings.Default.GövdeYazıBoldStyle, Background });
+                                string template = GenerateTemplate(günlükrapor, "report.lqd");
+                                IDocumentPaginatorSource fd = (FixedDocument)XamlReader.Parse(template);
+                                DocumentViewModel.Document = fd;
+                                DocumentViewModel.Başlık = "RAPOR";
+                                string xpsfilepath = $"{Path.GetTempPath()}{Guid.NewGuid()}.xps";
+                                string pdfPath = $"{Path.GetTempPath()}{Guid.NewGuid()}.pdf";
+                                await Application.Current.Dispatcher.InvokeAsync(() => SaveToXps(fd, xpsfilepath));
+                                await Task.Run(() => XpsConverter.Convert(xpsfilepath, pdfPath, 0));
+                                if (File.Exists(pdfPath))
+                                {
+                                    _ = Process.Start(new ProcessStartInfo(pdfPath) { UseShellExecute = true });
+                                    File.Delete(xpsfilepath);
+                                }
+                                data = null;
+                                günlükrapor = null;
+                                fd = null;
+                                template = null;
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        Indeterminate = false;
                     }
                 },
                 parameter => SeçiliKurum?.Kişi.Any(z => z.Seçili) == true);
@@ -348,11 +361,27 @@ namespace BaşarıBelgesi
 
         public string Error => string.Empty;
 
+        public IEnumerable<Kişi> ErrorKişiler => SeçiliKurum?.Kişi?.Where(p => p.Seçili && !p.TcDoğrula(p.TC).IsValid) ?? [];
+
         public RelayCommand<object> ExceldenAl { get; }
 
         public IEnumerable<int> FontSize { get; } = Enumerable.Range(8, 25);
 
-        public bool HasErrors => SeçiliKurum?.Kişi?.Any(p => !p.TcDoğrula(p.TC).IsValid) == true;
+        public bool HasErrors => ErrorKişiler.Any();
+
+        public bool Indeterminate
+        {
+            get;
+
+            set
+            {
+                if (field != value)
+                {
+                    field = value;
+                    OnPropertyChanged(nameof(Indeterminate));
+                }
+            }
+        }
 
         public Kişi Kişi { get; set; }
 

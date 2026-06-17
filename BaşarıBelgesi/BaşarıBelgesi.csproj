@@ -97,6 +97,7 @@
     <Compile Include="Kurum.cs" />
     <Compile Include="Kurumlar.cs" />
     <Compile Include="RelayCommand.cs" />
+    <Compile Include="ReverseBooleanConverter.cs" />
     <Page Include="DocumentViewer.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

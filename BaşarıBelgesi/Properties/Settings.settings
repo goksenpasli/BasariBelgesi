@@ -11,5 +11,8 @@
     <Setting Name="GövdeYazıStyle" Type="System.String" Scope="User">
       <Value Profile="(Default)">Normal</Value>
     </Setting>
+    <Setting Name="GövdeYazıBoldStyle" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Normal</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
