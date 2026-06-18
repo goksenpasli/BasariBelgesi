@@ -160,8 +160,22 @@
                 Background="{DynamicResource BorderBackground}"
                 CanUserAddRows="False"
                 CanUserDeleteRows="False"
+                EnableColumnVirtualization="True"
+                EnableRowVirtualization="True"
                 ItemsSource="{Binding Source={StaticResource Kurumlar}}"
-                SelectedItem="{Binding SeçiKişi}">
+                SelectedItem="{Binding SeçiKişi}"
+                VirtualizingPanel.IsVirtualizing="True"
+                VirtualizingPanel.VirtualizationMode="Recycling">
+                <DataGrid.Resources>
+                    <ContextMenu x:Key="ImageMenu">
+                        <MenuItem Command="{Binding ResimKaydet, Source={StaticResource BaşarıBelgesiViewModel}}"
+                            CommandParameter="{Binding}"
+                            Header="RESİM KAYDET" />
+                        <MenuItem Command="{Binding ResimSil, Source={StaticResource BaşarıBelgesiViewModel}}"
+                            CommandParameter="{Binding}"
+                            Header="RESİM SİL" />
+                    </ContextMenu>
+                </DataGrid.Resources>
                 <DataGrid.Columns>
                     <DataGridCheckBoxColumn Binding="{Binding Seçili, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" CanUserSort="False">
                         <DataGridCheckBoxColumn.ElementStyle>
@@ -190,18 +204,8 @@
                             <DataTemplate>
                                 <Image Width="128"
                                     Height="128"
-                                    Source="{Binding Resim, Converter={StaticResource ByteToImageConverter}, Mode=OneWay}">
-                                    <Image.ContextMenu>
-                                        <ContextMenu>
-                                            <MenuItem Command="{Binding ResimKaydet, Source={StaticResource BaşarıBelgesiViewModel}}"
-                                                CommandParameter="{Binding}"
-                                                Header="RESİM KAYDET" />
-                                            <MenuItem Command="{Binding ResimSil, Source={StaticResource BaşarıBelgesiViewModel}}"
-                                                CommandParameter="{Binding}"
-                                                Header="RESİM SİL" />
-                                        </ContextMenu>
-                                    </Image.ContextMenu>
-                                </Image>
+                                    ContextMenu="{StaticResource ImageMenu}"
+                                    Source="{Binding Resim, Converter={StaticResource ByteToImageConverter}, Mode=OneWay}" />
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                         <DataGridTemplateColumn.CellEditingTemplate>
@@ -263,7 +267,7 @@
                 </DataGrid.Columns>
             </DataGrid>
             <UniformGrid Grid.Row="1" Columns="2">
-                <TextBlock Text="İSİM ARA" />
+                <TextBlock HorizontalAlignment="Right" Text="İSİM ARA" />
                 <TextBox Text="{Binding Arama, UpdateSourceTrigger=PropertyChanged}" />
             </UniformGrid>
             <ProgressBar Grid.Row="2"
@@ -304,9 +308,10 @@
                 <Button Command="{Binding ŞablonGöster}" Content="EXCEL ŞABLONU AL" />
                 <Button Command="{Binding ExceldenAl}" Content="EXCELDEN VERİ AL" />
                 <Button Command="{Binding Sakla}" Content="VERİLERİ KAYDET" />
-                <UniformGrid Columns="2" IsEnabled="{Binding Indeterminate, Converter={StaticResource ReverseBooleanConverter}}">
-                    <Button Command="{Binding BaşarıBelgesiÇıkar}" Content="BAŞARI BELGESİ GÖSTER" />
-                    <Button Command="{Binding PdfBaşarıBelgesiÇıkar}" Content="PDF BAŞARI BELGESİ ÇIKAR" />
+                <UniformGrid Columns="3" IsEnabled="{Binding Indeterminate, Converter={StaticResource ReverseBooleanConverter}}">
+                    <Button Command="{Binding BaşarıBelgesiÇıkar}" Content="BAŞARI BELGESİ&#10;GÖSTER" />
+                    <Button Command="{Binding PdfBaşarıBelgesiÇıkar}" Content="PDF BAŞARI&#10;BELGESİ ÇIKAR" />
+                    <ComboBox DisplayMemberPath="Key" ItemsSource="{Binding ReportType}" SelectedValuePath="Value" VerticalContentAlignment="Center" SelectedValue="{Binding SelectedReportType}"/>
                 </UniformGrid>
 
             </UniformGrid>

@@ -2,6 +2,9 @@
 using DotLiquid;
 using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Dialogs;
+using PdfSharp.Pdf;
+using PdfSharp.Pdf.Advanced;
+using PdfSharp.Pdf.IO;
 using PdfSharp.Xps;
 using System;
 using System.Collections.Generic;
@@ -33,6 +36,8 @@ namespace BaşarıBelgesi
         {
             XmlDataPath = $@"{Path.GetDirectoryName(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath)}\Data.xml";
             Settings.Default.PropertyChanged += Default_PropertyChanged;
+            ReportType = new Dictionary<string, string> { { "Sayfa=>ArkaSayfa=>Sayfa=>ArkaSayfa", "Report.lqd" }, { "Sayfa=>Sayfa=>Sayfa=>ArkaSayfa=>ArkaSayfa=>ArkaSayfa", "ReportFirstLast.lqd" }, };
+
             Kişi = new Kişi();
             Kurum = new Kurum();
             DocumentViewModel = new DocumentViewModel();
@@ -90,10 +95,12 @@ namespace BaşarıBelgesi
             AddKişiLogo = new RelayCommand<object>(
                 parameter =>
                 {
-                    CommonOpenFileDialog openFileDialog = new() { Filters = { new CommonFileDialogFilter("Resim Dosyaları", "*.jpg;*.jpeg;*.jfif;*.jpe;*.png;*.gif;*.tif;*.tiff;*.bmp;*.dib;*.rle;") }, Multiselect = false };
+                    CommonOpenFileDialog openFileDialog = new() { Filters = { new CommonFileDialogFilter("Resim Dosyaları", "*.pdf;*.jpg;*.jpeg;*.jfif;*.jpe;*.png;*.gif;*.tif;*.tiff;*.bmp;*.dib;*.rle;") }, Multiselect = false };
                     if (openFileDialog.ShowDialog() == CommonFileDialogResult.Ok)
                     {
-                        SeçiKişi.Resim = SetImage(openFileDialog.FileName, ImageFormat.Jpeg);
+                        SeçiKişi.Resim = string.Equals(Path.GetExtension(openFileDialog.FileName), ".pdf", StringComparison.InvariantCultureIgnoreCase)
+                                         ? Convert.ToBase64String(PdfGetFirstImage(openFileDialog.FileName))
+                                         : SetImage(openFileDialog.FileName, ImageFormat.Jpeg);
                     }
                     Kurumlar.Serialize();
                 },
@@ -139,21 +146,7 @@ namespace BaşarıBelgesi
             BaşarıBelgesiÇıkar = new RelayCommand<object>(
                 parameter =>
                 {
-                    if (HasErrors)
-                    {
-                        TaskDialog dialog = new()
-                        {
-                            OwnerWindowHandle = new WindowInteropHelper(Application.Current.MainWindow).Handle,
-                            Caption = Application.Current.MainWindow.Title,
-                            Icon = TaskDialogStandardIcon.Warning,
-                            Text = "Hatalı Kayıtlar Vardır.",
-                            InstructionText = "Seçili Kişilerde TC Nolarda Hatalı TC Var.",
-                            DetailsExpandedText = string.Join(Environment.NewLine, ErrorKişiler.Select(z => $"ADI: {z.Adi} SOYADI: {z.Soyadi} TC: {z.TC}"))
-                        };
-                        _ = dialog.Show();
-                        return;
-                    }
-                    if (File.Exists("report.lqd"))
+                    if (CheckDatas() && File.Exists(SelectedReportType))
                     {
                         IEnumerable<Kişi> data = SeçiliKurum?.Kişi.Where(z => z.Seçili);
                         Kurum kurum = SeçiliKurum;
@@ -161,7 +154,7 @@ namespace BaşarıBelgesi
                         {
                             Hash günlükrapor = Hash.FromAnonymousObject(
                                 new { Kişi = data, Kurum = kurum, Settings.Default.GövdeYazıTipi, Settings.Default.GövdeYazıTipiSize, Settings.Default.GövdeYazıStyle, Settings.Default.GövdeYazıBoldStyle, Background });
-                            string template = GenerateTemplate(günlükrapor, "report.lqd");
+                            string template = GenerateTemplate(günlükrapor, SelectedReportType);
                             IDocumentPaginatorSource fd = (FixedDocument)XamlReader.Parse(template);
                             DocumentViewModel.Document = fd;
                             DocumentViewModel.Başlık = "RAPOR";
@@ -181,21 +174,7 @@ namespace BaşarıBelgesi
                 {
                     try
                     {
-                        if (HasErrors)
-                        {
-                            TaskDialog dialog = new()
-                            {
-                                OwnerWindowHandle = new WindowInteropHelper(Application.Current.MainWindow).Handle,
-                                Caption = Application.Current.MainWindow.Title,
-                                Icon = TaskDialogStandardIcon.Warning,
-                                Text = "Hatalı Kayıtlar Vardır.",
-                                InstructionText = "Seçili Kişilerde TC Nolarda Hatalı TC Var.",
-                                DetailsExpandedText = string.Join(Environment.NewLine, ErrorKişiler.Select(z => $"ADI: {z.Adi} SOYADI: {z.Soyadi} TC: {z.TC}"))
-                            };
-                            _ = dialog.Show();
-                            return;
-                        }
-                        if (File.Exists("report.lqd"))
+                        if (CheckDatas() && File.Exists(SelectedReportType))
                         {
                             Indeterminate = true;
                             IEnumerable<Kişi> data = SeçiliKurum?.Kişi.Where(z => z.Seçili);
@@ -204,7 +183,7 @@ namespace BaşarıBelgesi
                             {
                                 Hash günlükrapor = Hash.FromAnonymousObject(
                                     new { Kişi = data, Kurum = kurum, Settings.Default.GövdeYazıTipi, Settings.Default.GövdeYazıTipiSize, Settings.Default.GövdeYazıStyle, Settings.Default.GövdeYazıBoldStyle, Background });
-                                string template = GenerateTemplate(günlükrapor, "report.lqd");
+                                string template = GenerateTemplate(günlükrapor, SelectedReportType);
                                 IDocumentPaginatorSource fd = (FixedDocument)XamlReader.Parse(template);
                                 DocumentViewModel.Document = fd;
                                 DocumentViewModel.Başlık = "RAPOR";
@@ -275,7 +254,7 @@ namespace BaşarıBelgesi
                         Kurumlar.Serialize();
                     }
                 },
-                parameter => parameter is Kişi);
+                parameter => true);
 
             ExceldenAl = new RelayCommand<object>(
                 parameter =>
@@ -397,6 +376,8 @@ namespace BaşarıBelgesi
 
         public RelayCommand<object> PdfBaşarıBelgesiÇıkar { get; }
 
+        public Dictionary<string, string> ReportType { get; set; }
+
         public RelayCommand<object> ResimKaydet { get; }
 
         public RelayCommand<object> ResimSil { get; }
@@ -430,6 +411,19 @@ namespace BaşarıBelgesi
                 }
             }
         }
+
+        public string SelectedReportType
+        {
+            get;
+            set
+            {
+                if (field != value)
+                {
+                    field = value;
+                    OnPropertyChanged(nameof(SelectedReportType));
+                }
+            }
+        } = "Report.lqd";
 
         public RelayCommand<object> SetBackgroundImage { get; }
 
@@ -517,6 +511,26 @@ namespace BaşarıBelgesi
             }
         }
 
+        private bool CheckDatas()
+        {
+            if (HasErrors)
+            {
+                TaskDialog dialog = new()
+                {
+                    OwnerWindowHandle = new WindowInteropHelper(Application.Current.MainWindow).Handle,
+                    Caption = Application.Current.MainWindow.Title,
+                    Icon = TaskDialogStandardIcon.Warning,
+                    Text = "Hatalı Kayıtlar Vardır.",
+                    InstructionText = "Seçili Kişilerde TC Nolarda Hatalı TC Var.",
+                    DetailsExpandedText = string.Join(Environment.NewLine, ErrorKişiler.Select(z => $"ADI: {z.Adi} SOYADI: {z.Soyadi} TC: {z.TC}"))
+                };
+                _ = dialog.Show();
+                return false;
+            }
+
+            return true;
+        }
+
         private IEnumerable<Kişi> CSVKişiler(string dosyayolu)
         {
             string[] satırlar = File.ReadAllLines(dosyayolu, Encoding.Default);
@@ -558,6 +572,42 @@ namespace BaşarıBelgesi
             Hash docContext = context;
 
             return template.Render(docContext);
+        }
+
+        private byte[] PdfGetFirstImage(string pdfFilePath)
+        {
+            try
+            {
+                using PdfDocument document = PdfReader.Open(pdfFilePath, PdfDocumentOpenMode.ReadOnly);
+
+                foreach (PdfPage page in document.Pages)
+                {
+                    PdfDictionary resources = page.Elements.GetDictionary("/Resources");
+                    PdfDictionary xObjects = resources?.Elements.GetDictionary("/XObject");
+
+                    if (xObjects == null)
+                    {
+                        continue;
+                    }
+
+                    foreach (PdfItem item in xObjects.Elements.Values)
+                    {
+                        PdfReference reference = item as PdfReference;
+
+                        if (reference?.Value is PdfDictionary xObject && xObject.Elements.GetString("/Subtype") == "/Image")
+                        {
+                            return xObject.Stream.Value;
+                        }
+                    }
+                }
+
+                return null;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+
         }
 
         private void SaveToXps(IDocumentPaginatorSource document, string filePath)
